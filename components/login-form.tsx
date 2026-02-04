@@ -40,7 +40,12 @@ export function LoginForm() {
       const user = await signIn(email, senha)
 
       if (user) {
-        router.push("/dashboard")
+        // Vendedores são redirecionados para Negociações, outros para Dashboard
+        if (user.cargo === "vendedor") {
+          router.push("/negociacoes")
+        } else {
+          router.push("/dashboard")
+        }
       } else {
         setError("Credenciais inválidas ou usuário não está ativo.")
       }
@@ -121,12 +126,12 @@ export function LoginForm() {
     >
       <Card className="w-full max-w-md shadow-2xl border-2 border-green-500/30 bg-[#0F172A]">
         <CardHeader className="text-center py-4 space-y-2">
-          <div className="flex items-center justify-center h-14">
+          <div className="flex items-center justify-center h-16">
             <Image 
-              src="/altuza-logo-horizontal.png" 
+              src="/logo-altuza-ofc.png" 
               alt="Altuza Digital Logo" 
-              width={240} 
-              height={60} 
+              width={280} 
+              height={70} 
               className="object-contain"
               priority
             />
