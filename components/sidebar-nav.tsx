@@ -6,12 +6,12 @@ import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getCurrentUser, signOut, CARGO_LABELS } from "@/lib/auth"
-import { LayoutDashboard, Handshake, Settings, LogOut, Menu, X, Shield, Car, Calendar, MessageCircle, Users } from "lucide-react"
+import { LayoutDashboard, Settings, LogOut, Menu, X, Shield, Car, Calendar, MessageCircle, Users, Handshake } from "lucide-react"
 import Image from "next/image"
 
 const allNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, vendorAccess: false },
-  { name: "Negociações", href: "/negociacoes", icon: Handshake, vendorAccess: true },
+  { name: "Negociações", href: "/negociacoes", icon: Users, vendorAccess: true },
   { name: "Agendamentos", href: "/agendamentos", icon: Calendar, vendorAccess: true },
   { name: "Estoque", href: "/estoque", icon: Car, vendorAccess: false },
   { name: "Configurações", href: "/configuracoes", icon: Settings, vendorAccess: false },
