@@ -90,6 +90,7 @@ export function SidebarNav() {
           <nav className="flex-1 px-4 py-4 space-y-2">
             {navigation.map((item) => {
               const isActive = pathname === item.href
+              const IconComponent = item.icon
               return (
                 <Link
                   key={item.name}
@@ -98,19 +99,17 @@ export function SidebarNav() {
                     flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
                     ${
                       isActive
-                        ? "bg-[#22C55E] font-semibold"
-                        : "hover:bg-[#0A0A0A] hover:border hover:border-[#111827]"
+                        ? "bg-[#22C55E] font-semibold text-black"
+                        : "text-white hover:bg-[#0A0A0A] hover:border hover:border-[#111827]"
                     }
                   `}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon
-                    className="mr-3 h-5 w-5"
-                    style={{
-                      color: isActive ? "#000000" : "#FFFFFF",
-                    }}
+                  <IconComponent
+                    className={`mr-3 h-5 w-5 ${isActive ? "text-black" : "text-white"}`}
+                    strokeWidth={2}
                   />
-                  <span style={{ color: isActive ? "#000000" : "#FFFFFF" }}>
+                  <span className={isActive ? "text-black" : "text-white"}>
                     {item.name}
                   </span>
                 </Link>
