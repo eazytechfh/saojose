@@ -120,13 +120,13 @@ export function LoginForm() {
       bg-black p-4"
     >
       <Card className="w-full max-w-md shadow-2xl border-2 border-green-500/30 bg-[#0F172A]">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex items-center justify-center">
+        <CardHeader className="text-center py-4 space-y-2">
+          <div className="flex items-center justify-center h-14">
             <Image 
               src="/altuza-logo-horizontal.png" 
               alt="Altuza Digital Logo" 
-              width={280} 
-              height={80} 
+              width={240} 
+              height={60} 
               className="object-contain"
               priority
             />
