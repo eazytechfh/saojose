@@ -11,7 +11,7 @@ import Image from "next/image"
 
 const allNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, vendorAccess: false },
-  { name: "Negociações", href: "/negociacoes", icon: Settings, vendorAccess: true },
+  { name: "Negociações", href: "/negociacoes", icon: Users, vendorAccess: true },
   { name: "Agendamentos", href: "/agendamentos", icon: Calendar, vendorAccess: true },
   { name: "Estoque", href: "/estoque", icon: Car, vendorAccess: false },
   { name: "Configurações", href: "/configuracoes", icon: Settings, vendorAccess: false },
