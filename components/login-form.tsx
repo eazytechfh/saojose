@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,12 +12,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { signIn } from "@/lib/auth"
 import { Loader2, AlertCircle } from "lucide-react"
-
-const LogoTriangle = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M24 4L44 40H4L24 4Z" fill="#22C55E" stroke="#22C55E" strokeWidth="2" strokeLinejoin="round" />
-  </svg>
-)
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
@@ -46,7 +40,12 @@ export function LoginForm() {
       const user = await signIn(email, senha)
 
       if (user) {
-        router.push("/dashboard")
+        // Vendedores são redirecionados para Negociações, outros para Dashboard
+        if (user.cargo === "vendedor") {
+          router.push("/negociacoes")
+        } else {
+          router.push("/dashboard")
+        }
       } else {
         setError("Credenciais inválidas ou usuário não está ativo.")
       }
@@ -126,10 +125,16 @@ export function LoginForm() {
       bg-black p-4"
     >
       <Card className="w-full max-w-md shadow-2xl border-2 border-green-500/30 bg-[#0F172A]">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex items-center justify-center space-x-3">
-            <LogoTriangle />
-
+        <CardHeader className="text-center py-4 space-y-2">
+          <div className="flex items-center justify-center gap-3">
+            <Image 
+              src="/altuza-icon.png" 
+              alt="Altuza Digital Logo" 
+              width={48} 
+              height={48} 
+              className="object-contain"
+              priority
+            />
             <h1 className="text-2xl font-bold text-green-500">Altuza Digital</h1>
           </div>
 
