@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Tema Altuza Digital - Azul marinho escuro com verde neon */
+    --background: 222 47% 11%; /* #0F172A - azul marinho escuro */
+    --foreground: 210 17% 98%; /* #FAFAFA - texto branco */
+    --card: 222 47% 11%; /* #0F172A - azul marinho escuro */
+    --card-foreground: 210 17% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 17% 98%;
+    --primary: 142 71% 45%; /* #22C55E - verde neon */
+    --primary-foreground: 222 47% 11%; /* texto preto/azul escuro sobre verde */
+    --secondary: 217 33% 17%; /* #1E293B - azul mais claro */
+    --secondary-foreground: 210 17% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%; /* #94A3B8 - cinza azulado */
+    --accent: 142 71% 45%; /* #22C55E - verde neon */
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 17% 98%;
+    --border: 217 33% 17%; /* #1E293B - bordas azul escuro */
+    --input: 222 47% 11%; /* #0F172A - fundo dos inputs */
+    --ring: 142 71% 45%; /* #22C55E - anel de foco verde */
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    /* Fundo preto puro para combinar com o tema */
+    @apply bg-black text-foreground;
+  }
+}
+
+/* Scrollbar customizada com verde Altuza */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #22c55e;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #16a34a;
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.15s ease-in-out;
+}
