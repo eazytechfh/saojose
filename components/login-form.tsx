@@ -126,15 +126,16 @@ export function LoginForm() {
     >
       <Card className="w-full max-w-md shadow-2xl border-2 border-green-500/30 bg-[#0F172A]">
         <CardHeader className="text-center py-4 space-y-2">
-          <div className="flex items-center justify-center h-16">
+          <div className="flex items-center justify-center gap-3">
             <Image 
-              src="/logo-altuza-ofc.png" 
+              src="/altuza-icon.png" 
               alt="Altuza Digital Logo" 
-              width={280} 
-              height={70} 
+              width={48} 
+              height={48} 
               className="object-contain"
               priority
             />
+            <h1 className="text-2xl font-bold text-green-500">Altuza Digital</h1>
           </div>
 
           <CardTitle className="text-xl text-green-500">Plataforma de Gestão de Leads</CardTitle>
