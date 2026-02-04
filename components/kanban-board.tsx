@@ -61,6 +61,15 @@ const COLUNAS_KANBAN = [
   "follow_up",
 ]
 
+// Colunas que o vendedor pode visualizar
+const COLUNAS_VENDEDOR = [
+  "em_negociacao",
+  "resgate",
+  "fechado",
+  "nao_fechou",
+  "follow_up",
+]
+
 interface KanbanBoardProps {
   empresaId: number
 }
@@ -81,9 +90,17 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
   const [deletingLead, setDeletingLead] = useState<number | null>(null)
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [progressValue, setProgressValue] = useState(0)
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(COLUNAS_KANBAN)
 
   useEffect(() => {
     loadLeads()
+    // Definir colunas visíveis baseado no cargo do usuário
+    const user = getCurrentUser()
+    if (user?.cargo === "vendedor") {
+      setVisibleColumns(COLUNAS_VENDEDOR)
+    } else {
+      setVisibleColumns(COLUNAS_KANBAN)
+    }
   }, [])
 
   useEffect(() => {
@@ -580,7 +597,7 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
           <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="overflow-x-auto">
               <div className="flex gap-4 min-w-max pb-4">
-                {COLUNAS_KANBAN.map((stage) => (
+                {visibleColumns.map((stage) => (
                   <Droppable key={stage} droppableId={stage}>
                     {(provided, snapshot) => (
                       <Card

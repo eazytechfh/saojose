@@ -6,15 +6,15 @@ import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getCurrentUser, signOut, CARGO_LABELS } from "@/lib/auth"
-import { LayoutDashboard, Users, Settings, LogOut, Menu, X, Shield, Car, Calendar, MessageCircle } from "lucide-react"
+import { LayoutDashboard, Handshake, Settings, LogOut, Menu, X, Shield, Car, Calendar, MessageCircle, Users } from "lucide-react"
 import Image from "next/image"
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Negociações", href: "/negociacoes", icon: Users },
-  { name: "Agendamentos", href: "/agendamentos", icon: Calendar },
-  { name: "Estoque", href: "/estoque", icon: Car },
-  { name: "Configurações", href: "/configuracoes", icon: Settings },
+const allNavigation = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, vendorAccess: false },
+  { name: "Negociações", href: "/negociacoes", icon: Handshake, vendorAccess: true },
+  { name: "Agendamentos", href: "/agendamentos", icon: Calendar, vendorAccess: true },
+  { name: "Estoque", href: "/estoque", icon: Car, vendorAccess: false },
+  { name: "Configurações", href: "/configuracoes", icon: Settings, vendorAccess: false },
 ]
 
 export function SidebarNav() {
@@ -22,6 +22,11 @@ export function SidebarNav() {
   const pathname = usePathname()
   const router = useRouter()
   const user = getCurrentUser()
+
+  // Filtrar navegação baseado no cargo do usuário
+  const navigation = user?.cargo === "vendedor" 
+    ? allNavigation.filter((item) => item.vendorAccess)
+    : allNavigation
 
   const handleSignOut = () => {
     signOut()
@@ -112,16 +117,18 @@ export function SidebarNav() {
               )
             })}
 
-            <a
-              href="https://conexao.eazy.tec.br/login"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-white hover:bg-[#0A0A0A] hover:border hover:border-[#111827]"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <MessageCircle className="mr-3 h-5 w-5 text-white" />
-              Conexão Whatsapp
-            </a>
+            {user?.cargo !== "vendedor" && (
+              <a
+                href="https://conexao.eazy.tec.br/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-white hover:bg-[#0A0A0A] hover:border hover:border-[#111827]"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <MessageCircle className="mr-3 h-5 w-5 text-white" />
+                Conexão Whatsapp
+              </a>
+            )}
           </nav>
 
           <div className="p-4 border-t border-[#111827]">
