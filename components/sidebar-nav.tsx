@@ -106,9 +106,9 @@ export function SidebarNav() {
                   onClick={() => setSidebarOpen(false)}
                 >
                   <IconComponent
-                    className="mr-3 h-5 w-5"
-                    strokeWidth={2}
-                    color={isActive ? "#000000" : "#FFFFFF"}
+                    className="mr-3 h-5 w-5 flex-shrink-0"
+                    strokeWidth={2.5}
+                    style={{ color: isActive ? "#000000" : "#FFFFFF", minWidth: "20px", minHeight: "20px" }}
                   />
                   <span className={isActive ? "text-black" : "text-white"}>
                     {item.name}
