@@ -96,11 +96,12 @@ export function SidebarNav() {
                   key={item.name}
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
+                  style={isActive ? { backgroundColor: "#22C55E" } : undefined}
                   className={`
                     flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
                     ${
                       isActive
-                        ? "bg-[#22C55E] font-semibold"
+                        ? "font-semibold"
                         : "hover:bg-[#0A0A0A] hover:border hover:border-[#111827]"
                     }
                   `}
@@ -108,7 +109,8 @@ export function SidebarNav() {
                 >
                   <Icon 
                     className="mr-3 h-5 w-5 flex-shrink-0"
-                    color={isActive ? "#000000" : "#FFFFFF"}
+                    stroke={isActive ? "#000" : "#FFF"}
+                    style={{ color: isActive ? "#000000" : "#FFFFFF" }}
                     strokeWidth={2}
                   />
                   <span style={{ color: isActive ? "#000000" : "#FFFFFF" }}>
