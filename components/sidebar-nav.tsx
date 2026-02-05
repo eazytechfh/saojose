@@ -91,6 +91,7 @@ export function SidebarNav() {
             {navigation.map((item) => {
               const isActive = pathname === item.href
               const IconComponent = item.icon
+              const iconColor = isActive ? "#000000" : "#FFFFFF"
               return (
                 <Link
                   key={item.name}
@@ -105,11 +106,14 @@ export function SidebarNav() {
                   `}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <IconComponent
-                    className="mr-3 h-5 w-5 flex-shrink-0"
-                    strokeWidth={2.5}
-                    style={{ color: isActive ? "#000000" : "#FFFFFF", minWidth: "20px", minHeight: "20px" }}
-                  />
+                  <span className="mr-3 flex-shrink-0" style={{ width: 20, height: 20 }}>
+                    <IconComponent
+                      width={20}
+                      height={20}
+                      stroke={iconColor}
+                      strokeWidth={2}
+                    />
+                  </span>
                   <span className={isActive ? "text-black" : "text-white"}>
                     {item.name}
                   </span>
