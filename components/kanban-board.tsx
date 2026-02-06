@@ -61,13 +61,13 @@ const COLUNAS_KANBAN = [
   "follow_up",
 ]
 
-// Colunas que o vendedor pode visualizar
+// Colunas que o vendedor pode visualizar (ordem específica)
 const COLUNAS_VENDEDOR = [
   "em_negociacao",
-  "resgate",
   "fechado",
   "nao_fechou",
   "follow_up",
+  "resgate",
 ]
 
 interface KanbanBoardProps {

@@ -89,27 +89,36 @@ export function SidebarNav() {
 
           <nav className="flex-1 px-4 py-4 space-y-2">
             {navigation.map((item) => {
-              const isActive = pathname === item.href
-              const IconComponent = item.icon
+              const isActive =
+                pathname === item.href || pathname.startsWith(item.href + "/")
+
+              // Força Negociações pelo href (não depende de nome/acento)
+              const IconComponent =
+                item.href === "/negociacoes" ? Users : item.icon
+
               return (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  style={isActive ? { backgroundColor: "#22C55E" } : undefined}
                   className={`
                     flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors
                     ${
                       isActive
-                        ? "bg-[#22C55E] font-semibold text-black"
+                        ? "font-semibold text-black"
                         : "text-white hover:bg-[#0A0A0A] hover:border hover:border-[#111827]"
                     }
                   `}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <IconComponent
-                    className="mr-3 h-5 w-5"
+                    className="mr-3 h-5 w-5 shrink-0"
                     strokeWidth={2}
-                    color={isActive ? "#000000" : "#FFFFFF"}
+                    stroke={isActive ? "#000000" : "#FFFFFF"}
+                    style={{ color: isActive ? "#000000" : "#FFFFFF" }}
                   />
+
                   <span className={isActive ? "text-black" : "text-white"}>
                     {item.name}
                   </span>
