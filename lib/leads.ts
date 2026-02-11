@@ -55,9 +55,10 @@ export const VALID_ESTAGIOS = [
 export async function getLeads(idEmpresa: number): Promise<Lead[]> {
   const supabase = createClient()
 
+  // ✅ Alias para padronizar o front: nome <- nome_lead (do banco)
   const { data, error } = await supabase
     .from("BASE_DE_LEADS")
-    .select("*")
+    .select("*, nome:nome_lead")
     .eq("id_empresa", idEmpresa)
     .order("created_at", { ascending: false })
 
@@ -66,7 +67,7 @@ export async function getLeads(idEmpresa: number): Promise<Lead[]> {
     return []
   }
 
-  return data || []
+  return (data as Lead[]) || []
 }
 
 export async function updateLeadStage(leadId: number, newStage: string): Promise<boolean> {
@@ -86,7 +87,8 @@ export async function updateLeadStage(leadId: number, newStage: string): Promise
         updated_at: new Date().toISOString(),
       })
       .eq("id", leadId)
-      .select()
+      // ✅ Alias também no retorno do update (senão lead.nome vem undefined)
+      .select("*, nome:nome_lead")
 
     if (error) {
       console.error("Error updating lead stage:", error)
@@ -112,7 +114,7 @@ export async function updateLeadStage(leadId: number, newStage: string): Promise
 
     if (newStage === "em_negociacao") {
       try {
-        const lead = data[0]
+        const lead = data[0] as Lead
         console.log("[v0] Lead moved to em_negociacao, creating agendamento for lead:", leadId)
 
         // Check if agendamento already exists for this lead
@@ -578,46 +580,26 @@ export function parseCurrency(value: string): number {
   // Se estiver vazio após limpeza, retorna 0
   if (!cleanValue) return 0
 
-  // Lidar com diferentes formatos de entrada:
-  // 35000 -> 35000
-  // 35.000 -> 35000 (formato brasileiro de milhares)
-  // 35,00 -> 35 (formato brasileiro de decimais)
-  // 35.000,00 -> 35000 (formato brasileiro completo)
-
   // Se tem vírgula, assumimos que é separador decimal brasileiro
   if (cleanValue.includes(",")) {
-    // Se tem ponto E vírgula, o ponto é separador de milhares
     if (cleanValue.includes(".") && cleanValue.includes(",")) {
-      // Formato: 35.000,00 -> remove pontos e substitui vírgula por ponto
       cleanValue = cleanValue.replace(/\./g, "").replace(",", ".")
     } else {
-      // Formato: 35000,00 -> substitui vírgula por ponto
       cleanValue = cleanValue.replace(",", ".")
     }
-  }
-  // Se tem apenas pontos, pode ser separador de milhares ou decimal
-  else if (cleanValue.includes(".")) {
-    // Se tem mais de um ponto, são separadores de milhares
+  } else if (cleanValue.includes(".")) {
     const dotCount = (cleanValue.match(/\./g) || []).length
     if (dotCount > 1) {
-      // Remove todos os pontos (separadores de milhares)
       cleanValue = cleanValue.replace(/\./g, "")
-    }
-    // Se tem apenas um ponto, pode ser decimal ou milhares
-    // Se tem mais de 3 dígitos após o ponto, é separador de milhares
-    else {
+    } else {
       const parts = cleanValue.split(".")
       if (parts[1] && parts[1].length > 2) {
-        // É separador de milhares, remove o ponto
         cleanValue = cleanValue.replace(".", "")
       }
-      // Senão, mantém como separador decimal
     }
   }
 
-  // Converte para número
   const numericValue = Number.parseFloat(cleanValue)
-
   return isNaN(numericValue) ? 0 : numericValue
 }
 
@@ -656,7 +638,6 @@ export async function getLeadStats(idEmpresa: number) {
   const fechados = leadsPorEstagio.fechado || 0
   const conversao = totalLeads > 0 ? ((fechados / totalLeads) * 100).toFixed(1) : "0"
 
-  // Calcular valores totais e médios
   const valorTotal = leads.reduce((sum, lead) => sum + (lead.valor || 0), 0)
   const valorMedio = totalLeads > 0 ? valorTotal / totalLeads : 0
 
