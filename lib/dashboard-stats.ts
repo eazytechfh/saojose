@@ -249,7 +249,6 @@ export async function getDashboardData(idEmpresa: number, filters: DashboardFilt
       "em_qualificacao",
       "em_negociacao",
       "follow_up",
-      "pesquisa_atendimento",
       "fechado",
       "nao_fechou",
     ]

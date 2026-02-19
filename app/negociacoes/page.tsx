@@ -199,16 +199,21 @@ export default function Negociacoes() {
         `}</style>
 
         {/* ============================
-             CONTEÚDO DA PÁGINA
+             HEADER COM TÍTULO
            ============================ */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black">
-          <div className="container mx-auto px-6 py-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">Negociações</h1>
-              <p className="text-gray-600">Gerencie seus leads através do funil de vendas</p>
-            </div>
+        <div className="flex-shrink-0 border-b border-[#22C55E] bg-black px-6 py-4">
+          <h1 className="text-3xl font-bold mb-1">Negociações</h1>
+          <p className="text-gray-400 text-sm">Gerencie seus leads através do funil de vendas</p>
+        </div>
 
-            <KanbanBoard />
+        {/* ============================
+             CONTEÚDO DA PÁGINA - OPTIMIZADO PARA KANBAN
+           ============================ */}
+        <main className="flex-1 overflow-hidden bg-black flex flex-col">
+          <div className="flex-1 overflow-auto">
+            <div className="px-6 py-6 h-full">
+              <KanbanBoard />
+            </div>
           </div>
         </main>
       </div>

@@ -25,7 +25,6 @@ export const ESTAGIO_LABELS = {
   resgate: "Resgate",
   fechado: "Fechado",
   nao_fechou: "Não Fechou",
-  pesquisa_atendimento: "Pesquisa de Atendimento",
   follow_up: "Follow Up",
 }
 
@@ -36,7 +35,6 @@ export const ESTAGIO_COLORS = {
   resgate: "bg-purple-100 text-purple-800",
   fechado: "bg-emerald-100 text-emerald-800",
   nao_fechou: "bg-red-100 text-red-800",
-  pesquisa_atendimento: "bg-orange-100 text-orange-800",
   follow_up: "bg-indigo-100 text-indigo-800",
 }
 
@@ -48,7 +46,6 @@ export const VALID_ESTAGIOS = [
   "resgate",
   "fechado",
   "nao_fechou",
-  "pesquisa_atendimento",
   "follow_up",
 ]
 
@@ -335,92 +332,6 @@ export async function generateResumoComercial(lead: Lead): Promise<boolean> {
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         console.error("[v0] Webhook request timed out after 30 seconds")
-      } else if (error.message.includes("Failed to fetch")) {
-        console.error("[v0] Network error - check if webhook URL is accessible and CORS is configured")
-      }
-      console.error("[v0] Error details:", {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-      })
-    }
-
-    return false
-  }
-}
-
-export async function sendPesquisaAtendimentoWebhook(lead: Lead): Promise<boolean> {
-  try {
-    console.log("[v0] Starting pesquisa atendimento webhook call for lead:", lead.id)
-
-    const webhookUrl = "https://eazytech-n8n.gsl3ku.easypanel.host/webhook/7f1e49f9-a476-49b7-9883-8a01fe6622e2"
-
-    const now = new Date()
-    const brasiliaTimestamp = toBrasiliaTime(now)
-
-    // Converter created_at e updated_at para horário de Brasília
-    const createdAtBrasilia = toBrasiliaTime(new Date(lead.created_at))
-    const updatedAtBrasilia = toBrasiliaTime(new Date(lead.updated_at))
-
-    const payload = {
-      id: lead.id,
-      id_empresa: lead.id_empresa,
-      nome_lead: lead.nome,
-      telefone: lead.telefone,
-      email: lead.email,
-      origem: lead.origem,
-      vendedor: lead.vendedor,
-      nome_vendedor: lead.vendedor, // adicionando nome_vendedor como campo separado
-      veiculo_interesse: lead.veiculo_interesse,
-      resumo_qualificacao: lead.resumo_qualificacao,
-      estagio_lead: lead.estagio_lead,
-      resumo_comercial: lead.resumo_comercial,
-      valor: lead.valor,
-      observacao_vendedor: lead.observacao_vendedor,
-      created_at: createdAtBrasilia,
-      updated_at: updatedAtBrasilia,
-      timestamp: brasiliaTimestamp,
-      action: "moved_to_pesquisa_atendimento", // identificador da ação
-    }
-
-    console.log("[v0] Pesquisa atendimento webhook payload:", payload)
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
-
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "User-Agent": "CRM-Atual-Veiculos/1.0",
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-      mode: "cors",
-    })
-
-    clearTimeout(timeoutId)
-
-    console.log("[v0] Pesquisa atendimento webhook response status:", response.status)
-    console.log("[v0] Pesquisa atendimento webhook response headers:", Object.fromEntries(response.headers.entries()))
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "Unable to read error response")
-      console.error("[v0] Pesquisa atendimento webhook error response:", errorText)
-      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-    }
-
-    const responseData = await response.text().catch(() => "No response body")
-    console.log("[v0] Pesquisa atendimento webhook success response:", responseData)
-
-    return true
-  } catch (error) {
-    console.error("[v0] Error sending pesquisa atendimento webhook:", error)
-
-    if (error instanceof Error) {
-      if (error.name === "AbortError") {
-        console.error("[v0] Pesquisa atendimento webhook request timed out after 30 seconds")
       } else if (error.message.includes("Failed to fetch")) {
         console.error("[v0] Network error - check if webhook URL is accessible and CORS is configured")
       }

@@ -157,7 +157,27 @@ export async function addCompanyMember(memberData: {
 }): Promise<{ success: boolean; error?: string }> {
   const supabase = createClient()
 
-  const { data: existingUser } = await supabase
+  // Validar cargo antes de enviar para o banco
+  const validCargos = ["administrador", "convidado", "sdr", "gestor", "vendedor"]
+  if (memberData.cargo && !validCargos.includes(memberData.cargo)) {
+    return { 
+      success: false, 
+      error: `Cargo inválido: ${memberData.cargo}. Valores válidos: ${validCargos.join(", ")}` 
+    }
+  }
+
+  // Validar status antes de enviar para o banco
+  const validStatus = ["ativo", "pendente", "inativo"]
+  const statusToUse = memberData.status || "ativo"
+  if (!validStatus.includes(statusToUse)) {
+    return { 
+      success: false, 
+      error: `Status inválido: ${statusToUse}` 
+    }
+  }
+
+  // Verificar se email já existe
+  const { data: existingUser, error: checkError } = await supabase
     .from("AUTORIZAÇÃO")
     .select("email")
     .eq("email", memberData.email)
@@ -167,6 +187,12 @@ export async function addCompanyMember(memberData: {
     return { success: false, error: "Este e-mail já está cadastrado no sistema." }
   }
 
+  if (checkError && checkError.code !== "PGRST116") {
+    // PGRST116 = não encontrou nada (esperado)
+    console.error("Error checking existing user:", checkError)
+  }
+
+  // Inserir novo membro
   const { data, error } = await supabase
     .from("AUTORIZAÇÃO")
     .insert({
@@ -178,14 +204,34 @@ export async function addCompanyMember(memberData: {
       senha: memberData.senha,
       telefone: memberData.telefone || null,
       plano: "gratuito",
-      status: memberData.status || "ativo",
+      status: statusToUse,
       cargo: memberData.cargo || "convidado",
     })
     .select()
 
   if (error) {
     console.error("Error adding company member:", error)
-    return { success: false, error: "Erro ao adicionar membro. Tente novamente." }
+    
+    // Retornar mensagens mais específicas baseadas no erro
+    if (error.message && error.message.includes("constraint")) {
+      if (error.message.includes("cargo")) {
+        return { 
+          success: false, 
+          error: "Cargo selecionado não é válido. Por favor, contate o suporte." 
+        }
+      }
+      if (error.message.includes("status")) {
+        return { 
+          success: false, 
+          error: "Status selecionado não é válido." 
+        }
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: error.message || "Erro ao adicionar membro. Tente novamente." 
+    }
   }
 
   return { success: true }

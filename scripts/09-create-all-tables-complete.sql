@@ -30,7 +30,7 @@ ALTER TABLE "AUTORIZAÇÃO"
 DROP CONSTRAINT IF EXISTS "AUTORIZAÇÃO_cargo_check";
 ALTER TABLE "AUTORIZAÇÃO" 
 ADD CONSTRAINT "AUTORIZAÇÃO_cargo_check" 
-CHECK (cargo IN ('administrador', 'convidado'));
+CHECK (cargo IN ('administrador', 'convidado', 'sdr', 'gestor', 'vendedor'));
 
 -- Índices para AUTORIZAÇÃO
 CREATE INDEX IF NOT EXISTS idx_autorizacao_email_status 

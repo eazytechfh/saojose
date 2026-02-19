@@ -36,6 +36,25 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
     setLoading(true)
     setError("")
 
+    // Validações básicas
+    if (!formData.nome_usuario.trim()) {
+      setError("Nome do usuário é obrigatório")
+      setLoading(false)
+      return
+    }
+
+    if (!formData.email.trim() || !formData.email.includes("@")) {
+      setError("E-mail válido é obrigatório")
+      setLoading(false)
+      return
+    }
+
+    if (!formData.senha.trim() || formData.senha.length < 6) {
+      setError("Senha com mínimo de 6 caracteres é obrigatória")
+      setLoading(false)
+      return
+    }
+
     try {
       const result = await addCompanyMember({
         id_empresa: currentUser.id_empresa,
@@ -79,10 +98,22 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
         onSuccess()
         onClose()
       } else {
-        setError(result.error || "Erro ao adicionar membro.")
+        // Melhorar mensagem de erro com mais detalhes
+        const errorMessage = result.error || "Erro ao adicionar membro."
+        console.error("[v0] Erro ao adicionar membro:", errorMessage)
+        
+        // Se o erro for sobre cargo inválido, dar dica específica
+        if (errorMessage.includes("cargo") || errorMessage.includes("constraint")) {
+          setError("O cargo selecionado não é válido. Contate o suporte.")
+        } else if (errorMessage.includes("email") || errorMessage.includes("exists")) {
+          setError("Este e-mail já está cadastrado no sistema.")
+        } else {
+          setError(errorMessage)
+        }
       }
     } catch (err) {
-      setError("Erro ao adicionar membro. Tente novamente.")
+      console.error("[v0] Exception ao adicionar membro:", err)
+      setError("Erro ao adicionar membro. Tente novamente ou contate o suporte.")
     } finally {
       setLoading(false)
     }

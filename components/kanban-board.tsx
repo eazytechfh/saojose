@@ -15,7 +15,6 @@ import {
   getLeads,
   updateLeadStage,
   generateResumoComercial,
-  sendPesquisaAtendimentoWebhook,
   deleteLead,
   type Lead,
   ESTAGIO_LABELS,
@@ -57,7 +56,6 @@ const COLUNAS_KANBAN = [
   "resgate",
   "fechado",
   "nao_fechou",
-  "pesquisa_atendimento",
   "follow_up",
 ]
 
@@ -220,35 +218,6 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
         setTimeout(() => setResumoMessage(null), 5000)
       } else {
         console.log("Lead moved successfully")
-
-        if (newStage === "pesquisa_atendimento" && leadData) {
-          console.log("[v0] Lead moved to Pesquisa de Atendimento, triggering webhook")
-
-          try {
-            const webhookSuccess = await sendPesquisaAtendimentoWebhook(leadData)
-
-            if (webhookSuccess) {
-              setResumoMessage({
-                type: "success",
-                text: "Lead movido para Pesquisa de Atendimento e webhook enviado com sucesso!",
-              })
-            } else {
-              setResumoMessage({
-                type: "error",
-                text: "Lead movido, mas houve erro ao enviar webhook de Pesquisa de Atendimento.",
-              })
-            }
-
-            setTimeout(() => setResumoMessage(null), 5000)
-          } catch (webhookError) {
-            console.error("[v0] Error sending pesquisa atendimento webhook:", webhookError)
-            setResumoMessage({
-              type: "error",
-              text: "Lead movido, mas houve erro ao processar webhook de Pesquisa de Atendimento.",
-            })
-            setTimeout(() => setResumoMessage(null), 5000)
-          }
-        }
       }
     } catch (error) {
       console.error("Unexpected error moving lead:", error)
@@ -446,51 +415,37 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* View Toggle */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Visualização
-            </CardTitle>
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === "kanban" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("kanban")}
-                className="flex items-center gap-2 !bg-[#22C55E] !text-black !border-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
-                style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Kanban
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className="flex items-center gap-2 !bg-transparent !text-[#22C55E] !border-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
-                style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
-              >
-                <List className="h-4 w-4" />
-                Lista
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Mensagem de Status Global */}
-      {resumoMessage && (
-        <Alert
-          className={`${resumoMessage.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}
+    <div className="space-y-2 h-full flex flex-col">
+      {/* View Toggle - Compacto */}
+      <div className="flex gap-2 pb-2">
+        <Button
+          variant={viewMode === "kanban" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setViewMode("kanban")}
+          className="flex items-center gap-2 !bg-[#22C55E] !text-black !border-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+          style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
         >
+          <LayoutGrid className="h-4 w-4" />
+          Kanban
+        </Button>
+        <Button
+          variant={viewMode === "list" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setViewMode("list")}
+          className="flex items-center gap-2 !bg-transparent !text-[#22C55E] !border-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+          style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
+        >
+          <List className="h-4 w-4" />
+          Lista
+        </Button>
+      </div>
+
+      {/* Mensagem de Status - Inline */}
+      {resumoMessage && (
+        <div className={`text-xs px-3 py-2 rounded flex items-center gap-2 ${resumoMessage.type === "success" ? "bg-green-900 text-green-100 border border-green-700" : "bg-red-900 text-red-100 border border-red-700"}`}>
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className={resumoMessage.type === "success" ? "text-green-700" : "text-red-700"}>
-            {resumoMessage.text}
-          </AlertDescription>
-        </Alert>
+          <span>{resumoMessage.text}</span>
+        </div>
       )}
 
       {/* Dialog com barra de progresso */}
@@ -516,92 +471,54 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
         <LeadsListView leads={leads} onLeadsUpdate={handleLeadsUpdate} />
       ) : (
         <>
-          {/* Filtros */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filtros
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar por nome, telefone ou vendedor..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Select value={filterOrigem} onValueChange={setFilterOrigem}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por origem" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as origens</SelectItem>
-                    {origens.map((origem) => (
-                      <SelectItem key={origem} value={origem!}>
-                        {origem}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={filterEstagio} onValueChange={setFilterEstagio}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por estágio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os estágios</SelectItem>
-                    {Object.entries(ESTAGIO_LABELS).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Instruções de Uso */}
-          <Card className="bg-white border-[#22C55E]">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Move className="h-5 w-5 text-[#22C55E]" />
-                <div>
-                  <p className="text-sm font-medium text-black">
-                    💡 <strong>Como usar:</strong> Arraste e solte os cards dos leads entre as colunas para alterar o
-                    estágio
-                  </p>
-                  <p className="text-xs text-gray-700 mt-1">
-                    As alterações são salvas automaticamente no banco de dados
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Debug Info - Remover em produção */}
-          <Card className="bg-gray-50 border-gray-200">
-            <CardContent className="p-3">
-              <div className="text-xs text-gray-600">
-                <strong>Debug:</strong> Estágios válidos: {VALID_ESTAGIOS.join(", ")}
-                {movingLead && <span className="ml-4 text-orange-600">Movendo lead ID: {movingLead}</span>}
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Filtros - Compactos */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar por nome, telefone ou vendedor..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-9 text-xs"
+              />
+            </div>
+            <Select value={filterOrigem} onValueChange={setFilterOrigem}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue placeholder="Filtrar por origem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as origens</SelectItem>
+                {origens.map((origem) => (
+                  <SelectItem key={origem} value={origem!}>
+                    {origem}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterEstagio} onValueChange={setFilterEstagio}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue placeholder="Filtrar por estágio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os estágios</SelectItem>
+                {Object.entries(ESTAGIO_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+                    
           {/* Kanban Board */}
           <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1">
               <div className="flex gap-4 min-w-max pb-4">
                 {visibleColumns.map((stage) => (
                   <Droppable key={stage} droppableId={stage}>
                     {(provided, snapshot) => (
                       <Card
-                        className={`w-80 min-h-[500px] flex-shrink-0 transition-all duration-200 ${
+                        className={`w-80 min-h-[300px] flex-shrink-0 transition-all duration-200 ${
                           snapshot.isDraggingOver
                             ? "bg-gradient-to-b from-blue-50 to-blue-100 border-blue-300 shadow-lg transform scale-105"
                             : "hover:shadow-md"
