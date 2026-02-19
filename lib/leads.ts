@@ -266,7 +266,7 @@ export async function generateResumoComercial(lead: Lead): Promise<boolean> {
   try {
     console.log("[v0] Starting webhook call for lead:", lead.id)
 
-    const webhookUrl = "https://n8n.eazy.tec.br/webhook/e66d8dd4-59ce-451e-a729-32758694a228"
+    const webhookUrl = "https://n8n.eazy.tec.br/webhook/8c751d48-7396-4439-8883-6b247b3b6b12"
 
     const now = new Date()
     const brasiliaTimestamp = toBrasiliaTime(now)
@@ -350,7 +350,7 @@ export async function sendFollowUpWebhook(lead: Lead): Promise<boolean> {
   try {
     console.log("[v0] Starting follow up webhook call for lead:", lead.id)
 
-    const webhookUrl = "https://n8n.eazy.tec.br/webhook/7baf8d1e-9002-4c99-8ae8-04f9b820611e"
+    const webhookUrl = "https://n8n.eazy.tec.br/webhook/2d6b0a48-4b0e-4848-91c1-6cd3a09c2ad8"
 
     const now = new Date()
     const brasiliaTimestamp = toBrasiliaTime(now)
@@ -413,7 +413,7 @@ export async function sendMensagemWebhook(lead: Lead, mensagem?: string): Promis
   try {
     console.log("[v0] Starting mensagem webhook call for lead:", lead.id)
 
-    const webhookUrl = "https://n8n.eazy.tec.br/webhook/2aa1b398-67a7-40fd-abe2-1b71f77c9161"
+    const webhookUrl = "https://n8n.eazy.tec.br/webhook/c2833163-8275-4e8f-ac50-764ae634be09"
 
     const now = new Date()
     const brasiliaTimestamp = toBrasiliaTime(now)
