@@ -261,8 +261,8 @@ export function DashboardCharts() {
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
               <div>
-                <span className="text-green-300 font-bold">Resumo por EstÃ¡gio</span>
-                <p className="text-xs text-gray-300 font-normal mt-1">DistribuiÃ§Ã£o dos leads</p>
+                <span className="text-green-300 font-bold">Resumo por Estágio</span>
+                <p className="text-xs text-gray-300 font-normal mt-1">Distribuição dos leads</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -294,13 +294,13 @@ export function DashboardCharts() {
                   formatter={(value, name) => [value, "Quantidade de Leads"]}
                   labelFormatter={(label) => {
                     const labels = {
-                      oportunidade: "ðŸŽ¯ Oportunidade",
-                      em_qualificacao: "â³ Em QualificaÃ§Ã£o",
-                      qualificado: "âœ… Qualificado",
-                      follow_up: "ðŸ“ž Follow Up",
-                      nutricao: "ðŸŒ± NutriÃ§Ã£o",
-                      fechado: "ðŸŽ‰ Fechado",
-                      nao_fechou: "âŒ NÃ£o Fechou",
+                      oportunidade: "🎯 Oportunidade",
+                      em_qualificacao: "⏳ Em Qualificação",
+                      qualificado: "✅ Qualificado",
+                      follow_up: "📝 Follow Up",
+                      nutricao: "🌱 Nutrição",
+                      fechado: "🎉 Fechado",
+                      nao_fechou: "❌ Não Fechou",
                     }
                     return labels[label] || label
                   }}
@@ -315,7 +315,7 @@ export function DashboardCharts() {
               </BarChart>
             </ResponsiveContainer>
 
-            {/* Lista compacta dos estÃ¡gios */}
+            {/* Lista compacta dos estágios */}
             <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
               {dashboardData.estagioResumo
                 .sort((a, b) => b.quantidade - a.quantidade)
@@ -374,7 +374,7 @@ export function DashboardCharts() {
               </div>
               <div>
                 <span className="text-blue-300 font-bold">Performance por Vendedor</span>
-                <p className="text-xs text-gray-300 font-normal mt-1">AnÃ¡lise de resultados da equipe</p>
+                <p className="text-xs text-gray-300 font-normal mt-1">Análise de resultados da equipe</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -467,7 +467,7 @@ export function DashboardCharts() {
           </CardContent>
         </Card>
 
-        {/* Top VeÃ­culos - CARD PRETO */}
+        {/* Top Veículos - CARD PRETO */}
         <Card className="lg:col-span-5 border border-green-700 shadow-xl bg-black">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 text-lg">
@@ -475,7 +475,7 @@ export function DashboardCharts() {
                 <Car className="h-5 w-5 text-white" />
               </div>
               <div>
-                <span className="text-green-300 font-bold">Top VeÃ­culos</span>
+                <span className="text-green-300 font-bold">Top Veículos</span>
                 <p className="text-xs text-gray-300 font-normal mt-1">Modelos mais procurados</p>
               </div>
             </CardTitle>
@@ -524,7 +524,7 @@ export function DashboardCharts() {
               </PieChart>
             </ResponsiveContainer>
 
-            {/* Top 5 VeÃ­culos Lista - caixas pretas */}
+            {/* Top 5 Veículos Lista - caixas pretas */}
             <div className="mt-4 space-y-2">
               {dashboardData.veiculoStats.slice(0, 5).map((veiculo: any, index: number) => (
                 <div
@@ -640,7 +640,7 @@ export function DashboardCharts() {
           </CardContent>
         </Card>
 
-        {/* EvoluÃ§Ã£o dos EstÃ¡gios - CARD PRETO */}
+        {/* Evolução dos Estágios - CARD PRETO */}
         <Card className="lg:col-span-12 border border-green-700 shadow-xl bg-black">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 text-xl">
@@ -648,8 +648,8 @@ export function DashboardCharts() {
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
               <div>
-                <span className="text-green-300 font-bold">EvoluÃ§Ã£o dos Leads por EstÃ¡gio</span>
-                <p className="text-sm text-gray-300 font-normal mt-1">TendÃªncias temporais dos Ãºltimos 30 dias</p>
+                <span className="text-green-300 font-bold">Evolução dos Leads por Estágio</span>
+                <p className="text-sm text-gray-300 font-normal mt-1">Tendências temporais dos últimos 30 dias</p>
               </div>
             </CardTitle>
           </CardHeader>
