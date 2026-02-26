@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -150,17 +150,17 @@ export function DashboardCharts() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-white flex items-center gap-2">
                 <Activity className="h-4 w-4 text-green-400" />
-                Período
+                PerÃ­odo
               </label>
               <Select value={filters.periodo || "30d"} onValueChange={(value) => handleFilterChange("periodo", value)}>
                 <SelectTrigger className="border border-green-500 bg-black text-white">
-                  <SelectValue placeholder="Selecione o período" />
+                  <SelectValue placeholder="Selecione o perÃ­odo" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="today">Hoje</SelectItem>
-                  <SelectItem value="7d">📅 Últimos 7 dias</SelectItem>
-                  <SelectItem value="30d">📊 Últimos 30 dias</SelectItem>
-                  <SelectItem value="90d">📈 Últimos 90 dias</SelectItem>
+                  <SelectItem value="7d">ðŸ“… Ãšltimos 7 dias</SelectItem>
+                  <SelectItem value="30d">ðŸ“Š Ãšltimos 30 dias</SelectItem>
+                  <SelectItem value="90d">ðŸ“ˆ Ãšltimos 90 dias</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -178,10 +178,10 @@ export function DashboardCharts() {
                   <SelectValue placeholder="Todos os vendedores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">👥 Todos os vendedores</SelectItem>
+                  <SelectItem value="all">ðŸ‘¥ Todos os vendedores</SelectItem>
                   {dashboardData.availableVendedores.map((vendedor: string) => (
                     <SelectItem key={vendedor} value={vendedor}>
-                      👤 {vendedor}
+                      ðŸ‘¤ {vendedor}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -198,10 +198,10 @@ export function DashboardCharts() {
                   <SelectValue placeholder="Todas as origens" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">🌐 Todas as origens</SelectItem>
+                  <SelectItem value="all">ðŸŒ Todas as origens</SelectItem>
                   {dashboardData.availableOrigens.map((origem: string) => (
                     <SelectItem key={origem} value={origem}>
-                      📍 {origem}
+                      ðŸ“ {origem}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -226,23 +226,23 @@ export function DashboardCharts() {
               <span className="text-sm font-semibold text-white">Filtros ativos:</span>
               {filters.vendedor && (
                 <Badge className="bg-gradient-to-r from-blue-500 to-green-500 text-white px-3 py-1 flex items-center gap-2">
-                  👤 {filters.vendedor}
+                  ðŸ‘¤ {filters.vendedor}
                   <button
                     onClick={() => handleFilterChange("vendedor", "all")}
                     className="ml-1 hover:bg-white/20 rounded-full p-0.5"
                   >
-                    ×
+                    Ã—
                   </button>
                 </Badge>
               )}
               {filters.origem && (
                 <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 flex items-center gap-2">
-                  📍 {filters.origem}
+                  ðŸ“ {filters.origem}
                   <button
                     onClick={() => handleFilterChange("origem", "all")}
                     className="ml-1 hover:bg-white/20 rounded-full p-0.5"
                   >
-                    ×
+                    Ã—
                   </button>
                 </Badge>
               )}
@@ -251,9 +251,9 @@ export function DashboardCharts() {
         </CardContent>
       </Card>
 
-      {/* Grid Principal de Gráficos */}
+      {/* Grid Principal de GrÃ¡ficos */}
       <div className="grid gap-8 lg:grid-cols-12">
-        {/* Resumo dos Estágios - CARD PRETO */}
+        {/* Resumo dos EstÃ¡gios - CARD PRETO */}
         <Card className="lg:col-span-4 border border-green-700 shadow-xl bg-black">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 text-lg">
@@ -261,8 +261,8 @@ export function DashboardCharts() {
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
               <div>
-                <span className="text-green-300 font-bold">Resumo por Estágio</span>
-                <p className="text-xs text-gray-300 font-normal mt-1">Distribuição dos leads</p>
+                <span className="text-green-300 font-bold">Resumo por EstÃ¡gio</span>
+                <p className="text-xs text-gray-300 font-normal mt-1">DistribuiÃ§Ã£o dos leads</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -294,13 +294,13 @@ export function DashboardCharts() {
                   formatter={(value, name) => [value, "Quantidade de Leads"]}
                   labelFormatter={(label) => {
                     const labels = {
-                      oportunidade: "🎯 Oportunidade",
-                      em_qualificacao: "⏳ Em Qualificação",
-                      qualificado: "✅ Qualificado",
-                      follow_up: "📞 Follow Up",
-                      nutricao: "🌱 Nutrição",
-                      fechado: "🎉 Fechado",
-                      nao_fechou: "❌ Não Fechou",
+                      oportunidade: "ðŸŽ¯ Oportunidade",
+                      em_qualificacao: "â³ Em QualificaÃ§Ã£o",
+                      qualificado: "âœ… Qualificado",
+                      follow_up: "ðŸ“ž Follow Up",
+                      nutricao: "ðŸŒ± NutriÃ§Ã£o",
+                      fechado: "ðŸŽ‰ Fechado",
+                      nao_fechou: "âŒ NÃ£o Fechou",
                     }
                     return labels[label] || label
                   }}
@@ -315,7 +315,7 @@ export function DashboardCharts() {
               </BarChart>
             </ResponsiveContainer>
 
-            {/* Lista compacta dos estágios */}
+            {/* Lista compacta dos estÃ¡gios */}
             <div className="mt-4 space-y-2 max-h-40 overflow-y-auto">
               {dashboardData.estagioResumo
                 .sort((a, b) => b.quantidade - a.quantidade)
@@ -341,17 +341,17 @@ export function DashboardCharts() {
                         {item.estagio === "oportunidade"
                           ? "Oportunidade"
                           : item.estagio === "em_qualificacao"
-                            ? "Em Qualificação"
+                            ? "Em QualificaÃ§Ã£o"
                             : item.estagio === "qualificado"
                               ? "Qualificado"
                               : item.estagio === "follow_up"
                                 ? "Follow Up"
                                 : item.estagio === "nutricao"
-                                  ? "Nutrição"
+                                  ? "NutriÃ§Ã£o"
                                   : item.estagio === "fechado"
                                     ? "Fechado"
                                     : item.estagio === "nao_fechou"
-                                      ? "Não Fechou"
+                                      ? "NÃ£o Fechou"
                                       : item.estagio}
                       </span>
                     </div>
@@ -374,7 +374,7 @@ export function DashboardCharts() {
               </div>
               <div>
                 <span className="text-blue-300 font-bold">Performance por Vendedor</span>
-                <p className="text-xs text-gray-300 font-normal mt-1">Análise de resultados da equipe</p>
+                <p className="text-xs text-gray-300 font-normal mt-1">AnÃ¡lise de resultados da equipe</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -415,7 +415,7 @@ export function DashboardCharts() {
                     const dataKey = entry?.dataKey
                     if (dataKey === "total_leads") return [value, "Total de Leads"]
                     if (dataKey === "leads_fechados") return [value, "Leads Fechados"]
-                    if (dataKey === "taxa_conversao") return [`${Number(value).toFixed(1)}%`, "Taxa de Conversão (%)"]
+                    if (dataKey === "taxa_conversao") return [`${Number(value).toFixed(1)}%`, "Taxa de ConversÃ£o (%)"]
                     return [value, "Valor"]
                   }}
                 />
@@ -430,7 +430,7 @@ export function DashboardCharts() {
                 <Bar
                   dataKey="taxa_conversao"
                   fill="url(#conversaoGradient)"
-                  name="Taxa de Conversão (%)"
+                  name="Taxa de ConversÃ£o (%)"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -452,12 +452,12 @@ export function DashboardCharts() {
                               : "linear-gradient(to right, #fb923c, #b91c1c)",
                       }}
                     >
-                      {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
+                      {index === 0 ? "ðŸ¥‡" : index === 1 ? "ðŸ¥ˆ" : "ðŸ¥‰"}
                     </div>
                     <div className="flex-1">
                       <p className="font-bold text-white text-sm">{vendedor.vendedor}</p>
                       <p className="text-xs text-gray-300">
-                        {vendedor.total_leads} leads • {vendedor.taxa_conversao.toFixed(1)}%
+                        {vendedor.total_leads} leads â€¢ {vendedor.taxa_conversao.toFixed(1)}%
                       </p>
                     </div>
                   </div>
@@ -467,7 +467,7 @@ export function DashboardCharts() {
           </CardContent>
         </Card>
 
-        {/* Top Veículos - CARD PRETO */}
+        {/* Top VeÃ­culos - CARD PRETO */}
         <Card className="lg:col-span-5 border border-green-700 shadow-xl bg-black">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 text-lg">
@@ -475,7 +475,7 @@ export function DashboardCharts() {
                 <Car className="h-5 w-5 text-white" />
               </div>
               <div>
-                <span className="text-green-300 font-bold">Top Veículos</span>
+                <span className="text-green-300 font-bold">Top VeÃ­culos</span>
                 <p className="text-xs text-gray-300 font-normal mt-1">Modelos mais procurados</p>
               </div>
             </CardTitle>
@@ -519,12 +519,12 @@ export function DashboardCharts() {
                     color: "#fff",
                   }}
                   formatter={(value) => [`Interesse: ${value}`, "Interesse"]}
-                  labelFormatter={(label) => `Veículo: ${label}`}
+                  labelFormatter={(label) => `VeÃ­culo: ${label}`}
                 />
               </PieChart>
             </ResponsiveContainer>
 
-            {/* Top 5 Veículos Lista - caixas pretas */}
+            {/* Top 5 VeÃ­culos Lista - caixas pretas */}
             <div className="mt-4 space-y-2">
               {dashboardData.veiculoStats.slice(0, 5).map((veiculo: any, index: number) => (
                 <div
@@ -559,7 +559,7 @@ export function DashboardCharts() {
               </div>
               <div>
                 <span className="text-orange-300 font-bold">Performance por Origem</span>
-                <p className="text-xs text-gray-300 font-normal mt-1">Análise de canais de aquisição</p>
+                <p className="text-xs text-gray-300 font-normal mt-1">AnÃ¡lise de canais de aquisiÃ§Ã£o</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -591,14 +591,13 @@ export function DashboardCharts() {
                     boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.6)",
                     color: "#fff",
                   }}
-                  formatter={(value, name) => [
-                    name === "taxa_conversao" ? `${Number(value).toFixed(1)}%` : value,
-                    name === "total_leads"
-                      ? "📊 Total de Leads"
-                      : name === "leads_fechados"
-                        ? "🎉 Leads Fechados"
-                        : "📈 Taxa de Conversão",
-                  ]}
+                  formatter={(value, _name, entry: any) => {
+                    const dataKey = entry?.dataKey
+                    if (dataKey === "total_leads") return [value, "Total de Leads"]
+                    if (dataKey === "leads_fechados") return [value, "Leads Fechados"]
+                    if (dataKey === "taxa_conversao") return [`${Number(value).toFixed(1)}%`, "Taxa de Conversão (%)"]
+                    return [value, "Valor"]
+                  }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ color: "#fff" }} />
                 <Bar
@@ -616,7 +615,7 @@ export function DashboardCharts() {
                 <Bar
                   dataKey="taxa_conversao"
                   fill="url(#origemConversaoGradient)"
-                  name="Taxa de Conversão (%)"
+                  name="Taxa de ConversÃ£o (%)"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -627,13 +626,13 @@ export function DashboardCharts() {
               {dashboardData.origemStats.slice(0, 4).map((origem, index) => (
                 <div key={origem.origem} className="p-3 bg-black/80 rounded-lg border border-gray-700">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-white">📍 {origem.origem}</span>
+                    <span className="text-sm font-medium text-white">ðŸ“ {origem.origem}</span>
                     <Badge className="bg-gradient-to-r from-orange-400 to-red-400 text-white text-xs">
                       {origem.taxa_conversao.toFixed(1)}%
                     </Badge>
                   </div>
                   <div className="mt-1 text-xs text-gray-300">
-                    {origem.total_leads} leads • {origem.leads_fechados} fechados
+                    {origem.total_leads} leads â€¢ {origem.leads_fechados} fechados
                   </div>
                 </div>
               ))}
@@ -641,7 +640,7 @@ export function DashboardCharts() {
           </CardContent>
         </Card>
 
-        {/* Evolução dos Estágios - CARD PRETO */}
+        {/* EvoluÃ§Ã£o dos EstÃ¡gios - CARD PRETO */}
         <Card className="lg:col-span-12 border border-green-700 shadow-xl bg-black">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3 text-xl">
@@ -649,8 +648,8 @@ export function DashboardCharts() {
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
               <div>
-                <span className="text-green-300 font-bold">Evolução dos Leads por Estágio</span>
-                <p className="text-sm text-gray-300 font-normal mt-1">Tendências temporais dos últimos 30 dias</p>
+                <span className="text-green-300 font-bold">EvoluÃ§Ã£o dos Leads por EstÃ¡gio</span>
+                <p className="text-sm text-gray-300 font-normal mt-1">TendÃªncias temporais dos Ãºltimos 30 dias</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -684,7 +683,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.oportunidade}
                   fill={`url(#areaoportunidade)`}
-                  name="🎯 Oportunidade"
+                  name="ðŸŽ¯ Oportunidade"
                   strokeWidth={2}
                 />
                 <Area
@@ -693,7 +692,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.em_qualificacao}
                   fill={`url(#areaem_qualificacao)`}
-                  name="⏳ Em Qualificação"
+                  name="â³ Em QualificaÃ§Ã£o"
                   strokeWidth={2}
                 />
                 <Area
@@ -702,7 +701,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.qualificado}
                   fill={`url(#areaqualificado)`}
-                  name="✅ Qualificado"
+                  name="âœ… Qualificado"
                   strokeWidth={2}
                 />
                 <Area
@@ -711,7 +710,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.fechado}
                   fill={`url(#areafechado)`}
-                  name="🎉 Fechado"
+                  name="ðŸŽ‰ Fechado"
                   strokeWidth={2}
                 />
               </AreaChart>
