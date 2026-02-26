@@ -10,7 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { type Lead, ESTAGIO_LABELS, ESTAGIO_COLORS, updateLeadStage, generateResumoComercial, sendFollowUpWebhook, sendMensagemWebhook, deleteLead } from "@/lib/leads"
+import {
+  type Lead,
+  type LeadId,
+  ESTAGIO_LABELS,
+  ESTAGIO_COLORS,
+  updateLeadStage,
+  generateResumoComercial,
+  sendFollowUpWebhook,
+  sendMensagemWebhook,
+  deleteLead,
+} from "@/lib/leads"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +32,6 @@ import {
   Search,
   Filter,
   Phone,
-  Mail,
   User,
   Calendar,
   MapPin,
@@ -41,28 +50,41 @@ import {
 import { EditableValueField } from "./editable-value-field"
 import { EditableObservacaoField } from "./editable-observacao-field"
 import { EditableVeiculoField } from "./editable-veiculo-field"
-import { EditableEmailField } from "./editable-email-field"
+import { EditableCpfField } from "./editable-cpf-field"
+import { EditableDataNascimentoField, normalizeDateForInput } from "./editable-data-nascimento-field"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Progress } from "@/components/ui/progress"
 
 interface LeadsListViewProps {
   leads: Lead[]
   onLeadsUpdate: () => void
-  empresaId: number
 }
 
-export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListViewProps) {
+function formatDateSafe(value?: string): string {
+  if (!value) return "-"
+  const normalized = normalizeDateForInput(value)
+  if (normalized) {
+    const [year, month, day] = normalized.split("-")
+    return `${day}/${month}/${year}`
+  }
+
+  const fallbackDate = new Date(value)
+  if (Number.isNaN(fallbackDate.getTime())) return "-"
+  return fallbackDate.toLocaleDateString("pt-BR")
+}
+
+export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>(leads)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterOrigem, setFilterOrigem] = useState("")
   const [filterEstagio, setFilterEstagio] = useState("")
-  const [updatingStage, setUpdatingStage] = useState<number | null>(null)
+  const [updatingStage, setUpdatingStage] = useState<LeadId | null>(null)
   const [generatingResumo, setGeneratingResumo] = useState(false)
   const [resumoMessage, setResumoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [progressValue, setProgressValue] = useState(0)
-  const [selectedLeadIds, setSelectedLeadIds] = useState<number[]>([])
+  const [selectedLeadIds, setSelectedLeadIds] = useState<LeadId[]>([])
   const [processingAction, setProcessingAction] = useState(false)
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [messageText, setMessageText] = useState("")
@@ -94,8 +116,16 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
     setFilteredLeads(filtered)
   }
 
-  const handleStageChange = async (leadId: number, newStage: string, currentStage: string) => {
+  const handleStageChange = async (leadId: LeadId, newStage: string, currentStage: string) => {
     if (newStage === currentStage) return
+    if (newStage === "oportunidade" && currentStage !== "oportunidade") {
+      setResumoMessage({
+        type: "error",
+        text: "NÃ£o Ã© permitido mover leads de volta para Oportunidade.",
+      })
+      setTimeout(() => setResumoMessage(null), 3000)
+      return
+    }
 
     setUpdatingStage(leadId)
 
@@ -106,12 +136,14 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
         // Atualizar localmente para feedback imediato
         setFilteredLeads((prevLeads) =>
           prevLeads.map((lead) =>
-            lead.id === leadId ? { ...lead, estagio_lead: newStage, updated_at: new Date().toISOString() } : lead,
+            String(lead.id) === String(leadId)
+              ? { ...lead, estagio_lead: newStage, updated_at: new Date().toISOString() }
+              : lead,
           ),
         )
 
         // Atualizar o lead selecionado se for o mesmo
-        if (selectedLead && selectedLead.id === leadId) {
+        if (selectedLead && String(selectedLead.id) === String(leadId)) {
           setSelectedLead({ ...selectedLead, estagio_lead: newStage })
         }
 
@@ -135,12 +167,14 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
     }
   }
 
-  const handleValueUpdate = (leadId: number, newValue: number) => {
+  const handleValueUpdate = (leadId: LeadId, newValue: number) => {
     // Atualizar localmente para feedback imediato
-    setFilteredLeads((prevLeads) => prevLeads.map((lead) => (lead.id === leadId ? { ...lead, valor: newValue } : lead)))
+    setFilteredLeads((prevLeads) =>
+      prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, valor: newValue } : lead)),
+    )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, valor: newValue })
     }
 
@@ -148,14 +182,16 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
     onLeadsUpdate()
   }
 
-  const handleObservacaoUpdate = (leadId: number, newObservacao: string) => {
+  const handleObservacaoUpdate = (leadId: LeadId, newObservacao: string) => {
     // Atualizar localmente para feedback imediato
     setFilteredLeads((prevLeads) =>
-      prevLeads.map((lead) => (lead.id === leadId ? { ...lead, observacao_vendedor: newObservacao } : lead)),
+      prevLeads.map((lead) =>
+        String(lead.id) === String(leadId) ? { ...lead, observacao_vendedor: newObservacao } : lead,
+      ),
     )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, observacao_vendedor: newObservacao })
     }
 
@@ -163,14 +199,16 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
     onLeadsUpdate()
   }
 
-  const handleVeiculoUpdate = (leadId: number, newVeiculo: string) => {
+  const handleVeiculoUpdate = (leadId: LeadId, newVeiculo: string) => {
     // Atualizar localmente para feedback imediato
     setFilteredLeads((prevLeads) =>
-      prevLeads.map((lead) => (lead.id === leadId ? { ...lead, veiculo_interesse: newVeiculo } : lead)),
+      prevLeads.map((lead) =>
+        String(lead.id) === String(leadId) ? { ...lead, veiculo_interesse: newVeiculo } : lead,
+      ),
     )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, veiculo_interesse: newVeiculo })
     }
 
@@ -178,16 +216,32 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
     onLeadsUpdate()
   }
 
-  const handleEmailUpdate = (leadId: number, newEmail: string) => {
+  const handleCpfUpdate = (leadId: LeadId, newCpf: string) => {
     // Atualizar localmente para feedback imediato
-    setFilteredLeads((prevLeads) => prevLeads.map((lead) => (lead.id === leadId ? { ...lead, email: newEmail } : lead)))
+    setFilteredLeads((prevLeads) =>
+      prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, cpf: newCpf } : lead)),
+    )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
-      setSelectedLead({ ...selectedLead, email: newEmail })
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
+      setSelectedLead({ ...selectedLead, cpf: newCpf })
     }
 
     // Chamar callback para atualizar dados principais
+    onLeadsUpdate()
+  }
+
+  const handleDataNascimentoUpdate = (leadId: LeadId, newValue: string) => {
+    setFilteredLeads((prevLeads) =>
+      prevLeads.map((lead) =>
+        String(lead.id) === String(leadId) ? { ...lead, data_nascimento: newValue } : lead,
+      ),
+    )
+
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
+      setSelectedLead({ ...selectedLead, data_nascimento: newValue })
+    }
+
     onLeadsUpdate()
   }
 
@@ -250,7 +304,7 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
   }
 
   // Funções de seleção
-  const toggleSelectLead = (leadId: number) => {
+  const toggleSelectLead = (leadId: LeadId) => {
     setSelectedLeadIds((prev) =>
       prev.includes(leadId) ? prev.filter((id) => id !== leadId) : [...prev, leadId]
     )
@@ -265,7 +319,7 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
   }
 
   const getSelectedLeads = () => {
-    return filteredLeads.filter((lead) => selectedLeadIds.includes(lead.id))
+    return filteredLeads.filter((lead) => selectedLeadIds.some((id) => String(id) === String(lead.id)))
   }
 
   // Ações em massa
@@ -514,10 +568,13 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
               </TableHeader>
               <TableBody>
                 {filteredLeads.map((lead) => (
-                  <TableRow key={lead.id} className={`hover:bg-gray-50 ${selectedLeadIds.includes(lead.id) ? "bg-purple-50" : ""}`}>
+                  <TableRow
+                    key={lead.id}
+                    className={`hover:bg-gray-50 ${selectedLeadIds.some((id) => String(id) === String(lead.id)) ? "bg-purple-50" : ""}`}
+                  >
                     <TableCell>
                       <Checkbox
-                        checked={selectedLeadIds.includes(lead.id)}
+                        checked={selectedLeadIds.some((id) => String(id) === String(lead.id))}
                         onCheckedChange={() => toggleSelectLead(lead.id)}
                         aria-label={`Selecionar ${lead.nome}`}
                       />
@@ -559,11 +616,11 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
                       <Select
                         value={lead.estagio_lead}
                         onValueChange={(value) => handleStageChange(lead.id, value, lead.estagio_lead)}
-                        disabled={updatingStage === lead.id}
+                        disabled={String(updatingStage) === String(lead.id)}
                       >
                         <SelectTrigger className="w-auto min-w-[140px]">
                           <div className="flex items-center gap-2">
-                            {updatingStage === lead.id && <Loader2 className="h-3 w-3 animate-spin" />}
+                            {String(updatingStage) === String(lead.id) && <Loader2 className="h-3 w-3 animate-spin" />}
                             <Badge className={ESTAGIO_COLORS[lead.estagio_lead as keyof typeof ESTAGIO_COLORS]}>
                               {ESTAGIO_LABELS[lead.estagio_lead as keyof typeof ESTAGIO_LABELS]}
                             </Badge>
@@ -571,7 +628,11 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(ESTAGIO_LABELS).map(([key, label]) => (
-                            <SelectItem key={key} value={key}>
+                            <SelectItem
+                              key={key}
+                              value={key}
+                              disabled={key === "oportunidade" && lead.estagio_lead !== "oportunidade"}
+                            >
                               <div className="flex items-center gap-2">
                                 <Badge className={`${ESTAGIO_COLORS[key as keyof typeof ESTAGIO_COLORS]} text-xs`}>
                                   {label}
@@ -582,9 +643,7 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {new Date(lead.created_at).toLocaleDateString("pt-BR")}
-                    </TableCell>
+                    <TableCell className="hidden md:table-cell">{formatDateSafe(lead.created_at)}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" onClick={() => setSelectedLead(lead)} className="h-8 w-8 p-0">
                         <Eye className="h-4 w-4" />
@@ -637,10 +696,17 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
                     </div>
                   )}
 
-                  {selectedLead.email && (
+                  {selectedLead.cpf && (
                     <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-medium truncate">{selectedLead.email}</span>
+                      <FileText className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium truncate">{selectedLead.cpf}</span>
+                    </div>
+                  )}
+
+                  {normalizeDateForInput(selectedLead.data_nascimento) && (
+                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium">{formatDateSafe(selectedLead.data_nascimento)}</span>
                     </div>
                   )}
 
@@ -667,9 +733,7 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
 
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                     <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium">
-                      {new Date(selectedLead.created_at).toLocaleDateString("pt-BR")}
-                    </span>
+                    <span className="text-sm font-medium">{formatDateSafe(selectedLead.created_at)}</span>
                   </div>
                 </div>
               </div>
@@ -713,12 +777,22 @@ export function LeadsListView({ leads, onLeadsUpdate, empresaId }: LeadsListView
                       />
                     </div>
 
-                    {/* E-mail - Editável */}
+                    {/* CPF - Editável */}
                     <div>
-                      <EditableEmailField
+                      <EditableCpfField
                         leadId={selectedLead.id}
-                        currentEmail={selectedLead.email || ""}
-                        onEmailUpdate={(newEmail) => handleEmailUpdate(selectedLead.id, newEmail)}
+                        currentCpf={selectedLead.cpf || ""}
+                        onCpfUpdate={(newCpf) => handleCpfUpdate(selectedLead.id, newCpf)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <EditableDataNascimentoField
+                        leadId={selectedLead.id}
+                        currentValue={selectedLead.data_nascimento || ""}
+                        onDataNascimentoUpdate={(newValue) => handleDataNascimentoUpdate(selectedLead.id, newValue)}
                       />
                     </div>
                   </div>

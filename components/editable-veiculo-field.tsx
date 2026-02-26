@@ -5,11 +5,11 @@ import type React from "react"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { updateLeadVeiculo } from "@/lib/leads"
+import { updateLeadVeiculo, type LeadId } from "@/lib/leads"
 import { Check, X, Edit3, Car } from "lucide-react"
 
 interface EditableVeiculoFieldProps {
-  leadId: number
+  leadId: LeadId
   currentVeiculo: string
   onVeiculoUpdate: (newVeiculo: string) => void
   className?: string

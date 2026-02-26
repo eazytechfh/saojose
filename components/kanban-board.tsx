@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import {
   getLeads,
@@ -17,6 +16,7 @@ import {
   generateResumoComercial,
   deleteLead,
   type Lead,
+  type LeadId,
   ESTAGIO_LABELS,
   ESTAGIO_COLORS,
   VALID_ESTAGIOS,
@@ -25,9 +25,7 @@ import {
 import { getCurrentUser } from "@/lib/auth"
 import {
   Search,
-  Filter,
   Phone,
-  Mail,
   User,
   Calendar,
   MapPin,
@@ -46,7 +44,8 @@ import { LeadsListView } from "./leads-list-view"
 import { EditableValueField } from "./editable-value-field"
 import { EditableObservacaoField } from "./editable-observacao-field"
 import { EditableVeiculoField } from "./editable-veiculo-field"
-import { EditableEmailField } from "./editable-email-field"
+import { EditableCpfField } from "./editable-cpf-field"
+import { EditableDataNascimentoField, normalizeDateForInput } from "./editable-data-nascimento-field"
 
 // Nova ordem das colunas conforme solicitado
 const COLUNAS_KANBAN = [
@@ -68,11 +67,20 @@ const COLUNAS_VENDEDOR = [
   "resgate",
 ]
 
-interface KanbanBoardProps {
-  empresaId: number
+function formatDateSafe(value?: string): string {
+  if (!value) return "-"
+  const normalized = normalizeDateForInput(value)
+  if (normalized) {
+    const [year, month, day] = normalized.split("-")
+    return `${day}/${month}/${year}`
+  }
+
+  const fallbackDate = new Date(value)
+  if (Number.isNaN(fallbackDate.getTime())) return "-"
+  return fallbackDate.toLocaleDateString("pt-BR")
 }
 
-export function KanbanBoard({ empresaId }: KanbanBoardProps) {
+export function KanbanBoard() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,8 +92,8 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
   const [generatingResumo, setGeneratingResumo] = useState(false)
   const [resumoMessage, setResumoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [draggedLead, setDraggedLead] = useState<Lead | null>(null)
-  const [movingLead, setMovingLead] = useState<number | null>(null)
-  const [deletingLead, setDeletingLead] = useState<number | null>(null)
+  const [movingLead, setMovingLead] = useState<LeadId | null>(null)
+  const [deletingLead, setDeletingLead] = useState<LeadId | null>(null)
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [progressValue, setProgressValue] = useState(0)
   const [visibleColumns, setVisibleColumns] = useState<string[]>(COLUNAS_KANBAN)
@@ -147,8 +155,8 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
   }
 
   const handleDragStart = (start: any) => {
-    const leadId = Number.parseInt(start.draggableId)
-    const lead = leads.find((l) => l.id === leadId)
+    const leadId = start.draggableId
+    const lead = leads.find((l) => String(l.id) === String(leadId))
     setDraggedLead(lead || null)
   }
 
@@ -166,9 +174,18 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
       return
     }
 
-    const leadId = Number.parseInt(draggableId)
+    const leadId = draggableId as LeadId
     const newStage = destination.droppableId
     const oldStage = source.droppableId
+
+    if (newStage === "oportunidade" && oldStage !== "oportunidade") {
+      setResumoMessage({
+        type: "error",
+        text: "NÃ£o Ã© permitido mover leads de volta para Oportunidade.",
+      })
+      setTimeout(() => setResumoMessage(null), 5000)
+      return
+    }
 
     // Validar se o novo estágio é válido
     if (!VALID_ESTAGIOS.includes(newStage)) {
@@ -190,12 +207,14 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
 
     setMovingLead(leadId)
 
-    const leadData = leads.find((lead) => lead.id === leadId)
+    const leadData = leads.find((lead) => String(lead.id) === String(leadId))
 
     // Atualização otimista da UI
     setLeads((prevLeads) =>
       prevLeads.map((lead) =>
-        lead.id === leadId ? { ...lead, estagio_lead: newStage, updated_at: new Date().toISOString() } : lead,
+        String(lead.id) === String(leadId)
+          ? { ...lead, estagio_lead: newStage, updated_at: new Date().toISOString() }
+          : lead,
       ),
     )
 
@@ -206,7 +225,9 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
       if (!success) {
         // Reverter se falhou
         setLeads((prevLeads) =>
-          prevLeads.map((lead) => (lead.id === leadId ? { ...lead, estagio_lead: oldStage } : lead)),
+          prevLeads.map((lead) =>
+            String(lead.id) === String(leadId) ? { ...lead, estagio_lead: oldStage } : lead,
+          ),
         )
 
         // Mostrar erro
@@ -224,7 +245,7 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
 
       // Reverter se falhou
       setLeads((prevLeads) =>
-        prevLeads.map((lead) => (lead.id === leadId ? { ...lead, estagio_lead: oldStage } : lead)),
+        prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, estagio_lead: oldStage } : lead)),
       )
 
       setResumoMessage({
@@ -238,43 +259,63 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
     }
   }
 
-  const handleValueUpdate = (leadId: number, newValue: number) => {
-    setLeads((prevLeads) => prevLeads.map((lead) => (lead.id === leadId ? { ...lead, valor: newValue } : lead)))
+  const handleValueUpdate = (leadId: LeadId, newValue: number) => {
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, valor: newValue } : lead)),
+    )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, valor: newValue })
     }
   }
 
-  const handleObservacaoUpdate = (leadId: number, newObservacao: string) => {
+  const handleObservacaoUpdate = (leadId: LeadId, newObservacao: string) => {
     setLeads((prevLeads) =>
-      prevLeads.map((lead) => (lead.id === leadId ? { ...lead, observacao_vendedor: newObservacao } : lead)),
+      prevLeads.map((lead) =>
+        String(lead.id) === String(leadId) ? { ...lead, observacao_vendedor: newObservacao } : lead,
+      ),
     )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, observacao_vendedor: newObservacao })
     }
   }
 
-  const handleVeiculoUpdate = (leadId: number, newVeiculo: string) => {
+  const handleVeiculoUpdate = (leadId: LeadId, newVeiculo: string) => {
     setLeads((prevLeads) =>
-      prevLeads.map((lead) => (lead.id === leadId ? { ...lead, veiculo_interesse: newVeiculo } : lead)),
+      prevLeads.map((lead) =>
+        String(lead.id) === String(leadId) ? { ...lead, veiculo_interesse: newVeiculo } : lead,
+      ),
     )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, veiculo_interesse: newVeiculo })
     }
   }
 
-  const handleEmailUpdate = (leadId: number, newEmail: string) => {
-    setLeads((prevLeads) => prevLeads.map((lead) => (lead.id === leadId ? { ...lead, email: newEmail } : lead)))
+  const handleCpfUpdate = (leadId: LeadId, newCpf: string) => {
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, cpf: newCpf } : lead)),
+    )
 
     // Atualizar o lead selecionado se for o mesmo
-    if (selectedLead && selectedLead.id === leadId) {
-      setSelectedLead({ ...selectedLead, email: newEmail })
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
+      setSelectedLead({ ...selectedLead, cpf: newCpf })
+    }
+  }
+
+  const handleDataNascimentoUpdate = (leadId: LeadId, newValue: string) => {
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) =>
+        String(lead.id) === String(leadId) ? { ...lead, data_nascimento: newValue } : lead,
+      ),
+    )
+
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
+      setSelectedLead({ ...selectedLead, data_nascimento: newValue })
     }
   }
 
@@ -336,7 +377,7 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
     }
   }
 
-  const handleDeleteLead = async (leadId: number) => {
+  const handleDeleteLead = async (leadId: LeadId) => {
     if (!confirm("Tem certeza que deseja excluir este lead? Esta ação não pode ser desfeita.")) {
       return
     }
@@ -348,10 +389,10 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
 
       if (success) {
         // Remover o lead da lista local
-        setLeads((prevLeads) => prevLeads.filter((lead) => lead.id !== leadId))
+        setLeads((prevLeads) => prevLeads.filter((lead) => String(lead.id) !== String(leadId)))
 
         // Fechar o modal se o lead excluído estava selecionado
-        if (selectedLead && selectedLead.id === leadId) {
+        if (selectedLead && String(selectedLead.id) === String(leadId)) {
           setSelectedLead(null)
         }
 
@@ -557,7 +598,7 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
                                     snapshot.isDragging
                                       ? "shadow-2xl rotate-3 scale-105 bg-white border-blue-300 z-50"
                                       : "hover:shadow-md hover:-translate-y-1"
-                                  } ${movingLead === lead.id ? "opacity-50" : ""}`}
+                                  } ${String(movingLead) === String(lead.id) ? "opacity-50" : ""}`}
                                   onClick={(e) => {
                                     // Só abre o modal se não estiver arrastando
                                     if (!snapshot.isDragging) {
@@ -572,7 +613,7 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
                                           {lead.nome}
                                         </h4>
                                         <div className="flex items-center gap-1">
-                                          {movingLead === lead.id && (
+                                          {String(movingLead) === String(lead.id) && (
                                             <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
                                           )}
                                           <Move className="h-3 w-3 text-gray-400 flex-shrink-0" />
@@ -651,10 +692,10 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDeleteLead(selectedLead.id)}
-                      disabled={deletingLead === selectedLead.id}
+                      disabled={String(deletingLead) === String(selectedLead.id)}
                       className="flex items-center gap-2"
                     >
-                      {deletingLead === selectedLead.id ? (
+                      {String(deletingLead) === String(selectedLead.id) ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Excluindo...
@@ -693,10 +734,19 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
                         </div>
                       )}
 
-                      {selectedLead.email && (
+                      {selectedLead.cpf && (
                         <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <Mail className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm font-medium truncate">{selectedLead.email}</span>
+                          <FileText className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm font-medium truncate">{selectedLead.cpf}</span>
+                        </div>
+                      )}
+
+                      {normalizeDateForInput(selectedLead.data_nascimento) && (
+                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                          <Calendar className="h-4 w-4 text-gray-500" />
+                          <span className="text-sm font-medium">
+                            {formatDateSafe(selectedLead.data_nascimento)}
+                          </span>
                         </div>
                       )}
 
@@ -723,9 +773,7 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
 
                       <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                         <Calendar className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm font-medium">
-                          {new Date(selectedLead.created_at).toLocaleDateString("pt-BR")}
-                        </span>
+                        <span className="text-sm font-medium">{formatDateSafe(selectedLead.created_at)}</span>
                       </div>
                     </div>
                   </div>
@@ -771,12 +819,24 @@ export function KanbanBoard({ empresaId }: KanbanBoardProps) {
                           />
                         </div>
 
-                        {/* E-mail - Editável */}
+                        {/* CPF - Editável */}
                         <div>
-                          <EditableEmailField
+                          <EditableCpfField
                             leadId={selectedLead.id}
-                            currentEmail={selectedLead.email || ""}
-                            onEmailUpdate={(newEmail) => handleEmailUpdate(selectedLead.id, newEmail)}
+                            currentCpf={selectedLead.cpf || ""}
+                            onCpfUpdate={(newCpf) => handleCpfUpdate(selectedLead.id, newCpf)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                          <EditableDataNascimentoField
+                            leadId={selectedLead.id}
+                            currentValue={selectedLead.data_nascimento || ""}
+                            onDataNascimentoUpdate={(newValue) =>
+                              handleDataNascimentoUpdate(selectedLead.id, newValue)
+                            }
                           />
                         </div>
                       </div>

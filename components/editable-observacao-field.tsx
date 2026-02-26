@@ -5,11 +5,11 @@ import type React from "react"
 import { useState } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { updateLeadObservacao } from "@/lib/leads"
+import { updateLeadObservacao, type LeadId } from "@/lib/leads"
 import { Check, X, Edit3, MessageSquare } from "lucide-react"
 
 interface EditableObservacaoFieldProps {
-  leadId: number
+  leadId: LeadId
   currentObservacao: string
   onObservacaoUpdate: (newObservacao: string) => void
   className?: string

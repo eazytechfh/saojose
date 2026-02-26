@@ -5,11 +5,11 @@ import type React from "react"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { formatCurrency, parseCurrency, updateLeadValue } from "@/lib/leads"
+import { formatCurrency, parseCurrency, updateLeadValue, type LeadId } from "@/lib/leads"
 import { Check, X, Edit3, DollarSign } from "lucide-react"
 
 interface EditableValueFieldProps {
-  leadId: number
+  leadId: LeadId
   currentValue: number
   onValueUpdate: (newValue: number) => void
   className?: string

@@ -157,6 +157,7 @@ export function DashboardCharts() {
                   <SelectValue placeholder="Selecione o período" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="today">Hoje</SelectItem>
                   <SelectItem value="7d">📅 Últimos 7 dias</SelectItem>
                   <SelectItem value="30d">📊 Últimos 30 dias</SelectItem>
                   <SelectItem value="90d">📈 Últimos 90 dias</SelectItem>
@@ -518,7 +519,7 @@ export function DashboardCharts() {
                     boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.6)",
                     color: "#fff",
                   }}
-                  formatter={(value, name) => [value, "🚗 Interesse"]}
+                  formatter={(value) => [`Interesse: ${value}`, "Interesse"]}
                   labelFormatter={(label) => `Veículo: ${label}`}
                 />
               </PieChart>

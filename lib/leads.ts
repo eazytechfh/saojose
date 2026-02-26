@@ -1,11 +1,13 @@
 import { createClient } from "@/utils/supabase/client"
 
 export interface Lead {
-  id: number
+  id: string | number
   id_empresa: number
   nome: string
   telefone?: string
   email?: string
+  cpf?: string
+  data_nascimento?: string
   origem?: string
   vendedor?: string
   veiculo_interesse?: string
@@ -16,6 +18,30 @@ export interface Lead {
   observacao_vendedor?: string
   created_at: string
   updated_at: string
+}
+
+export type LeadId = Lead["id"]
+
+const PAGE_SIZE = 1000
+
+function normalizeLeadIdForQuery(leadId: LeadId): string | number {
+  if (typeof leadId === "number") return leadId
+
+  const trimmed = String(leadId).trim()
+  if (/^\d+$/.test(trimmed)) {
+    const parsed = Number.parseInt(trimmed, 10)
+    if (!Number.isNaN(parsed)) return parsed
+  }
+
+  return trimmed
+}
+
+function normalizeLeadRecord(rawLead: any): Lead {
+  const estagio = rawLead?.estagio_lead === "pesquisa_atendimento" ? "follow_up" : rawLead?.estagio_lead
+  return {
+    ...rawLead,
+    estagio_lead: estagio,
+  } as Lead
 }
 
 export const ESTAGIO_LABELS = {
@@ -58,16 +84,48 @@ export async function getLeads(idEmpresa: number): Promise<Lead[]> {
     .select("*, nome:nome_lead")
     .eq("id_empresa", idEmpresa)
     .order("created_at", { ascending: false })
+    .range(0, PAGE_SIZE - 1)
 
   if (error) {
     console.error("Error fetching leads:", error)
     return []
   }
 
-  return (data as Lead[]) || []
+  const firstPage = ((data as Lead[]) || []).map((lead) => normalizeLeadRecord(lead))
+  if (firstPage.length < PAGE_SIZE) {
+    return firstPage
+  }
+
+  const allLeads = [...firstPage]
+  let from = PAGE_SIZE
+
+  while (true) {
+    const { data: nextData, error: nextError } = await supabase
+      .from("BASE_DE_LEADS")
+      .select("*, nome:nome_lead")
+      .eq("id_empresa", idEmpresa)
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1)
+
+    if (nextError) {
+      console.error("Error fetching paginated leads:", nextError)
+      break
+    }
+
+    const page = ((nextData as Lead[]) || []).map((lead) => normalizeLeadRecord(lead))
+    allLeads.push(...page)
+
+    if (page.length < PAGE_SIZE) {
+      break
+    }
+
+    from += PAGE_SIZE
+  }
+
+  return allLeads
 }
 
-export async function updateLeadStage(leadId: number, newStage: string): Promise<boolean> {
+export async function updateLeadStage(leadId: LeadId, newStage: string): Promise<boolean> {
   // Validar se o estágio é válido
   if (!VALID_ESTAGIOS.includes(newStage)) {
     console.error("Invalid stage:", newStage)
@@ -75,15 +133,34 @@ export async function updateLeadStage(leadId: number, newStage: string): Promise
   }
 
   const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
 
   try {
+    if (newStage === "oportunidade") {
+      const { data: currentLead, error: currentLeadError } = await supabase
+        .from("BASE_DE_LEADS")
+        .select("estagio_lead")
+        .eq("id", leadIdForQuery)
+        .maybeSingle()
+
+      if (currentLeadError) {
+        console.error("Error checking current lead stage:", currentLeadError)
+        return false
+      }
+
+      if (currentLead && currentLead.estagio_lead && currentLead.estagio_lead !== "oportunidade") {
+        console.error("Lead cannot be moved back to oportunidade:", leadId)
+        return false
+      }
+    }
+
     const { data, error } = await supabase
       .from("BASE_DE_LEADS")
       .update({
         estagio_lead: newStage,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", leadId)
+      .eq("id", leadIdForQuery)
       // ✅ Alias também no retorno do update (senão lead.nome vem undefined)
       .select("*, nome:nome_lead")
 
@@ -118,12 +195,12 @@ export async function updateLeadStage(leadId: number, newStage: string): Promise
         const { data: existingAgendamentos, error: checkError } = await supabase
           .from("AGENDAMENTOS")
           .select("id")
-          .eq("lead_id", leadId.toString())
+          .eq("lead_id", String(leadId))
 
         if (!checkError && !existingAgendamentos?.length) {
           const agendamentoData = {
             id_empresa: lead.id_empresa,
-            lead_id: leadId.toString(),
+            lead_id: String(leadId),
             titulo: `Agendamento - ${lead.nome}`,
             descricao: lead.veiculo_interesse ? `Interesse: ${lead.veiculo_interesse}` : null,
             data_agendamento: new Date().toISOString(),
@@ -157,8 +234,9 @@ export async function updateLeadStage(leadId: number, newStage: string): Promise
   }
 }
 
-export async function updateLeadValue(leadId: number, newValue: number): Promise<boolean> {
+export async function updateLeadValue(leadId: LeadId, newValue: number): Promise<boolean> {
   const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
 
   try {
     const { error } = await supabase
@@ -167,7 +245,7 @@ export async function updateLeadValue(leadId: number, newValue: number): Promise
         valor: newValue,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", leadId)
+      .eq("id", leadIdForQuery)
 
     if (error) {
       console.error("Error updating lead value:", error)
@@ -181,8 +259,9 @@ export async function updateLeadValue(leadId: number, newValue: number): Promise
   }
 }
 
-export async function updateLeadObservacao(leadId: number, newObservacao: string): Promise<boolean> {
+export async function updateLeadObservacao(leadId: LeadId, newObservacao: string): Promise<boolean> {
   const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
 
   try {
     const { error } = await supabase
@@ -191,7 +270,7 @@ export async function updateLeadObservacao(leadId: number, newObservacao: string
         observacao_vendedor: newObservacao,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", leadId)
+      .eq("id", leadIdForQuery)
 
     if (error) {
       console.error("Error updating lead observacao:", error)
@@ -205,8 +284,9 @@ export async function updateLeadObservacao(leadId: number, newObservacao: string
   }
 }
 
-export async function updateLeadVeiculo(leadId: number, newVeiculo: string): Promise<boolean> {
+export async function updateLeadVeiculo(leadId: LeadId, newVeiculo: string): Promise<boolean> {
   const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
 
   try {
     const { error } = await supabase
@@ -215,7 +295,7 @@ export async function updateLeadVeiculo(leadId: number, newVeiculo: string): Pro
         veiculo_interesse: newVeiculo,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", leadId)
+      .eq("id", leadIdForQuery)
 
     if (error) {
       console.error("Error updating lead veiculo:", error)
@@ -229,8 +309,9 @@ export async function updateLeadVeiculo(leadId: number, newVeiculo: string): Pro
   }
 }
 
-export async function updateLeadEmail(leadId: number, newEmail: string): Promise<boolean> {
+export async function updateLeadEmail(leadId: LeadId, newEmail: string): Promise<boolean> {
   const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
 
   try {
     const { error } = await supabase
@@ -239,7 +320,7 @@ export async function updateLeadEmail(leadId: number, newEmail: string): Promise
         email: newEmail,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", leadId)
+      .eq("id", leadIdForQuery)
 
     if (error) {
       console.error("Error updating lead email:", error)
@@ -249,6 +330,74 @@ export async function updateLeadEmail(leadId: number, newEmail: string): Promise
     return true
   } catch (error) {
     console.error("Unexpected error updating lead email:", error)
+    return false
+  }
+}
+
+export async function updateLeadCpf(leadId: LeadId, newCpf: string): Promise<boolean> {
+  const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
+
+  try {
+    const { error } = await supabase
+      .from("BASE_DE_LEADS")
+      .update({
+        cpf: newCpf,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadIdForQuery)
+
+    if (!error) {
+      return true
+    }
+
+    const shouldFallback = error.code === "42703" || error.code === "PGRST204"
+    if (!shouldFallback) {
+      console.error("Error updating lead cpf:", error)
+      return false
+    }
+
+    const { error: fallbackError } = await supabase
+      .from("BASE_DE_LEADS")
+      .update({
+        email: newCpf,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadIdForQuery)
+
+    if (fallbackError) {
+      console.error("Error updating lead cpf fallback (email):", fallbackError)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error("Unexpected error updating lead cpf:", error)
+    return false
+  }
+}
+
+export async function updateLeadDataNascimento(leadId: LeadId, value: string): Promise<boolean> {
+  const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
+
+  try {
+    const { error } = await supabase
+      .from("BASE_DE_LEADS")
+      .update({
+        data_nascimento: value || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadIdForQuery)
+
+    if (error) {
+      console.error("Error updating lead data_nascimento:", error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error("Unexpected error updating lead data_nascimento:", error)
     return false
   }
 }
@@ -281,6 +430,8 @@ export async function generateResumoComercial(lead: Lead): Promise<boolean> {
       nome_lead: lead.nome,
       telefone: lead.telefone,
       email: lead.email,
+      cpf: lead.cpf,
+      data_nascimento: lead.data_nascimento,
       origem: lead.origem,
       vendedor: lead.vendedor,
       veiculo_interesse: lead.veiculo_interesse,
@@ -363,6 +514,8 @@ export async function sendFollowUpWebhook(lead: Lead): Promise<boolean> {
       nome_lead: lead.nome,
       telefone: lead.telefone,
       email: lead.email,
+      cpf: lead.cpf,
+      data_nascimento: lead.data_nascimento,
       origem: lead.origem,
       vendedor: lead.vendedor,
       veiculo_interesse: lead.veiculo_interesse,
@@ -426,6 +579,8 @@ export async function sendMensagemWebhook(lead: Lead, mensagem?: string): Promis
       nome_lead: lead.nome,
       telefone: lead.telefone,
       email: lead.email,
+      cpf: lead.cpf,
+      data_nascimento: lead.data_nascimento,
       origem: lead.origem,
       vendedor: lead.vendedor,
       veiculo_interesse: lead.veiculo_interesse,
@@ -517,17 +672,34 @@ export function parseCurrency(value: string): number {
 export async function getLeadStats(idEmpresa: number) {
   const supabase = createClient()
 
-  const { data: leads, error } = await supabase
-    .from("BASE_DE_LEADS")
-    .select("estagio_lead, origem, valor")
-    .eq("id_empresa", idEmpresa)
+  const leads: Array<{ estagio_lead: string; origem?: string; valor?: number }> = []
+  let from = 0
 
-  if (error || !leads) {
+  while (true) {
+    const { data, error } = await supabase
+      .from("BASE_DE_LEADS")
+      .select("estagio_lead, origem, valor")
+      .eq("id_empresa", idEmpresa)
+      .range(from, from + PAGE_SIZE - 1)
+
+    if (error) {
+      console.error("Error fetching lead stats:", error)
+      break
+    }
+
+    const page = data || []
+    leads.push(...page)
+
+    if (page.length < PAGE_SIZE) break
+    from += PAGE_SIZE
+  }
+
+  if (!leads.length) {
     return {
       totalLeads: 0,
       leadsPorEstagio: {},
       leadsPorOrigem: {},
-      conversao: {},
+      conversao: "0",
       valorTotal: 0,
       valorMedio: 0,
     }
@@ -535,7 +707,8 @@ export async function getLeadStats(idEmpresa: number) {
 
   const totalLeads = leads.length
   const leadsPorEstagio = leads.reduce((acc: any, lead) => {
-    acc[lead.estagio_lead] = (acc[lead.estagio_lead] || 0) + 1
+    const estagio = lead.estagio_lead === "pesquisa_atendimento" ? "follow_up" : lead.estagio_lead
+    acc[estagio] = (acc[estagio] || 0) + 1
     return acc
   }, {})
 
@@ -562,11 +735,12 @@ export async function getLeadStats(idEmpresa: number) {
   }
 }
 
-export async function deleteLead(leadId: number): Promise<boolean> {
+export async function deleteLead(leadId: LeadId): Promise<boolean> {
   const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
 
   try {
-    const { error } = await supabase.from("BASE_DE_LEADS").delete().eq("id", leadId)
+    const { error } = await supabase.from("BASE_DE_LEADS").delete().eq("id", leadIdForQuery)
 
     if (error) {
       console.error("Error deleting lead:", error)

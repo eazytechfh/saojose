@@ -5,11 +5,11 @@ import type React from "react"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { updateLeadEmail } from "@/lib/leads"
+import { updateLeadEmail, type LeadId } from "@/lib/leads"
 import { Check, X, Edit3, Mail } from "lucide-react"
 
 interface EditableEmailFieldProps {
-  leadId: number
+  leadId: LeadId
   currentEmail: string
   onEmailUpdate: (newEmail: string) => void
   className?: string

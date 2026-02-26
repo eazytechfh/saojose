@@ -1,5 +1,7 @@
 import { createClient } from "@/utils/supabase/client"
 
+const PAGE_SIZE = 1000
+
 export interface DashboardFilters {
   vendedor?: string
   origem?: string
@@ -42,42 +44,67 @@ export interface EstagioEvolution {
 export async function getDashboardData(idEmpresa: number, filters: DashboardFilters = {}) {
   const supabase = createClient()
 
-  let query = supabase.from("BASE_DE_LEADS").select("*").eq("id_empresa", idEmpresa)
+  const applyFilters = (query: any) => {
+    let nextQuery = query.eq("id_empresa", idEmpresa)
 
-  // Aplicar filtros
-  if (filters.vendedor) {
-    query = query.eq("vendedor", filters.vendedor)
-  }
-
-  if (filters.origem) {
-    query = query.eq("origem", filters.origem)
-  }
-
-  if (filters.periodo) {
-    const now = new Date()
-    const startDate = new Date()
-
-    switch (filters.periodo) {
-      case "7d":
-        startDate.setDate(now.getDate() - 7)
-        break
-      case "30d":
-        startDate.setDate(now.getDate() - 30)
-        break
-      case "90d":
-        startDate.setDate(now.getDate() - 90)
-        break
-      default:
-        startDate.setDate(now.getDate() - 30)
+    if (filters.vendedor) {
+      nextQuery = nextQuery.eq("vendedor", filters.vendedor)
     }
 
-    query = query.gte("created_at", startDate.toISOString())
+    if (filters.origem) {
+      nextQuery = nextQuery.eq("origem", filters.origem)
+    }
+
+    if (filters.periodo) {
+      const now = new Date()
+      const startDate = new Date()
+
+      switch (filters.periodo) {
+        case "today":
+          startDate.setHours(0, 0, 0, 0)
+          break
+        case "7d":
+          startDate.setDate(now.getDate() - 7)
+          break
+        case "30d":
+          startDate.setDate(now.getDate() - 30)
+          break
+        case "90d":
+          startDate.setDate(now.getDate() - 90)
+          break
+        default:
+          startDate.setDate(now.getDate() - 30)
+      }
+
+      nextQuery = nextQuery.gte("created_at", startDate.toISOString())
+    }
+
+    return nextQuery
   }
 
-  const { data: leads, error } = await query
+  const leads: any[] = []
+  let from = 0
 
-  if (error || !leads) {
-    console.error("Error fetching dashboard data:", error)
+  while (true) {
+    const query = applyFilters(supabase.from("BASE_DE_LEADS").select("*")).range(from, from + PAGE_SIZE - 1)
+    const { data, error } = await query
+
+    if (error) {
+      console.error("Error fetching dashboard data:", error)
+      break
+    }
+
+    const page = data || []
+    leads.push(...page)
+
+    if (page.length < PAGE_SIZE) {
+      break
+    }
+
+    from += PAGE_SIZE
+  }
+
+  if (!leads.length) {
     return {
       totalLeads: 0,
       leadsPorEstagio: {},
@@ -96,10 +123,11 @@ export async function getDashboardData(idEmpresa: number, filters: DashboardFilt
 
   // Estatísticas básicas espelhando BASE_DE_LEADS
   const totalLeads = leads.length
+  const normalizedStage = (lead: any) => (lead.estagio_lead === "pesquisa_atendimento" ? "follow_up" : lead.estagio_lead)
 
   // Agrupamento por ESTAGIO_LEAD (coluna estagio_lead)
   const leadsPorEstagio = leads.reduce((acc: any, lead) => {
-    const estagio = lead.estagio_lead
+    const estagio = normalizedStage(lead)
     acc[estagio] = (acc[estagio] || 0) + 1
     return acc
   }, {})
@@ -136,12 +164,12 @@ export async function getDashboardData(idEmpresa: number, filters: DashboardFilt
     acc[lead.vendedor].total_leads++
     acc[lead.vendedor].valor_total += Number(lead.valor) || 0
 
-    if (lead.estagio_lead === "fechado") {
+    if (normalizedStage(lead) === "fechado") {
       acc[lead.vendedor].leads_fechados++
     }
 
     // Contar leads por estágio para cada vendedor
-    const estagio = lead.estagio_lead
+    const estagio = normalizedStage(lead)
     acc[lead.vendedor].leads_por_estagio[estagio] = (acc[lead.vendedor].leads_por_estagio[estagio] || 0) + 1
 
     return acc
@@ -171,7 +199,7 @@ export async function getDashboardData(idEmpresa: number, filters: DashboardFilt
     acc[lead.veiculo_interesse].total_interesse++
     acc[lead.veiculo_interesse].valor_total += Number(lead.valor) || 0
 
-    if (lead.estagio_lead === "fechado") {
+    if (normalizedStage(lead) === "fechado") {
       acc[lead.veiculo_interesse].leads_fechados++
     }
 
@@ -202,7 +230,7 @@ export async function getDashboardData(idEmpresa: number, filters: DashboardFilt
     acc[lead.origem].total_leads++
     acc[lead.origem].valor_total += Number(lead.valor) || 0
 
-    if (lead.estagio_lead === "fechado") {
+    if (normalizedStage(lead) === "fechado") {
       acc[lead.origem].leads_fechados++
     }
 
@@ -254,7 +282,7 @@ export async function getDashboardData(idEmpresa: number, filters: DashboardFilt
     ]
 
     estagios.forEach((estagio) => {
-      dayData[estagio] = dayLeads.filter((lead) => lead.estagio_lead === estagio).length
+      dayData[estagio] = dayLeads.filter((lead) => normalizedStage(lead) === estagio).length
     })
 
     estagioEvolution.push(dayData)
