@@ -150,17 +150,17 @@ export function DashboardCharts() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-white flex items-center gap-2">
                 <Activity className="h-4 w-4 text-green-400" />
-                PerÃ­odo
+                Periodo
               </label>
               <Select value={filters.periodo || "30d"} onValueChange={(value) => handleFilterChange("periodo", value)}>
                 <SelectTrigger className="border border-green-500 bg-black text-white">
-                  <SelectValue placeholder="Selecione o perÃ­odo" />
+                  <SelectValue placeholder="Selecione o periodo" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="today">Hoje</SelectItem>
-                  <SelectItem value="7d">ðŸ“… Ãšltimos 7 dias</SelectItem>
-                  <SelectItem value="30d">ðŸ“Š Ãšltimos 30 dias</SelectItem>
-                  <SelectItem value="90d">ðŸ“ˆ Ãšltimos 90 dias</SelectItem>
+                  <SelectItem value="7d">Ultimos 7 dias</SelectItem>
+                  <SelectItem value="30d">Ultimos 30 dias</SelectItem>
+                  <SelectItem value="90d">Ultimos 90 dias</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -178,10 +178,10 @@ export function DashboardCharts() {
                   <SelectValue placeholder="Todos os vendedores" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">ðŸ‘¥ Todos os vendedores</SelectItem>
+                  <SelectItem value="all">Todos os vendedores</SelectItem>
                   {dashboardData.availableVendedores.map((vendedor: string) => (
                     <SelectItem key={vendedor} value={vendedor}>
-                      ðŸ‘¤ {vendedor}
+                      {vendedor}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -198,10 +198,10 @@ export function DashboardCharts() {
                   <SelectValue placeholder="Todas as origens" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">ðŸŒ Todas as origens</SelectItem>
+                  <SelectItem value="all">Todas as origens</SelectItem>
                   {dashboardData.availableOrigens.map((origem: string) => (
                     <SelectItem key={origem} value={origem}>
-                      ðŸ“ {origem}
+                      {origem}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -226,7 +226,7 @@ export function DashboardCharts() {
               <span className="text-sm font-semibold text-white">Filtros ativos:</span>
               {filters.vendedor && (
                 <Badge className="bg-gradient-to-r from-blue-500 to-green-500 text-white px-3 py-1 flex items-center gap-2">
-                  ðŸ‘¤ {filters.vendedor}
+                  {filters.vendedor}
                   <button
                     onClick={() => handleFilterChange("vendedor", "all")}
                     className="ml-1 hover:bg-white/20 rounded-full p-0.5"
@@ -237,7 +237,7 @@ export function DashboardCharts() {
               )}
               {filters.origem && (
                 <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 flex items-center gap-2">
-                  ðŸ“ {filters.origem}
+                  {filters.origem}
                   <button
                     onClick={() => handleFilterChange("origem", "all")}
                     className="ml-1 hover:bg-white/20 rounded-full p-0.5"
