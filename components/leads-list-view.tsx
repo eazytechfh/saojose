@@ -58,6 +58,7 @@ import { Progress } from "@/components/ui/progress"
 interface LeadsListViewProps {
   leads: Lead[]
   onLeadsUpdate: () => void
+  totalLeadsCount: number
 }
 
 function formatDateSafe(value?: string): string {
@@ -73,7 +74,7 @@ function formatDateSafe(value?: string): string {
   return fallbackDate.toLocaleDateString("pt-BR")
 }
 
-export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
+export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsListViewProps) {
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>(leads)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -541,7 +542,10 @@ export function LeadsListView({ leads, onLeadsUpdate }: LeadsListViewProps) {
       {/* Lista de Leads */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Leads ({filteredLeads.length})</CardTitle>
+          <CardTitle>
+            Lista de Leads ({filteredLeads.length}
+            {totalLeadsCount > 0 ? ` de ${totalLeadsCount}` : ""})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

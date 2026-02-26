@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Progress } from "@/components/ui/progress"
 import {
   getLeads,
+  getLeadsTotalCount,
   updateLeadStage,
   generateResumoComercial,
   deleteLead,
@@ -97,6 +98,7 @@ export function KanbanBoard() {
   const [showProgressDialog, setShowProgressDialog] = useState(false)
   const [progressValue, setProgressValue] = useState(0)
   const [visibleColumns, setVisibleColumns] = useState<string[]>(COLUNAS_KANBAN)
+  const [totalLeadsCount, setTotalLeadsCount] = useState(0)
 
   useEffect(() => {
     loadLeads()
@@ -116,7 +118,8 @@ export function KanbanBoard() {
   const loadLeads = async () => {
     const user = getCurrentUser()
     if (user) {
-      let data = await getLeads(user.id_empresa)
+      const [allLeads, allLeadsCount] = await Promise.all([getLeads(user.id_empresa), getLeadsTotalCount(user.id_empresa)])
+      let data = allLeads
       
       // Se o usuário for vendedor, filtrar apenas os leads atribuídos a ele
       if (user.cargo === "vendedor") {
@@ -127,6 +130,7 @@ export function KanbanBoard() {
       }
       
       setLeads(data)
+      setTotalLeadsCount(user.cargo === "vendedor" ? data.length : allLeadsCount)
     }
     setLoading(false)
   }
@@ -463,7 +467,11 @@ export function KanbanBoard() {
           variant={viewMode === "kanban" ? "default" : "outline"}
           size="sm"
           onClick={() => setViewMode("kanban")}
-          className="flex items-center gap-2 !bg-[#22C55E] !text-black !border-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+          className={`flex items-center gap-2 !border-[#22C55E] ${
+            viewMode === "kanban"
+              ? "!bg-[#22C55E] !text-black hover:!bg-[#22C55E] hover:!text-black"
+              : "!bg-transparent !text-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+          }`}
           style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
         >
           <LayoutGrid className="h-4 w-4" />
@@ -473,7 +481,11 @@ export function KanbanBoard() {
           variant={viewMode === "list" ? "default" : "outline"}
           size="sm"
           onClick={() => setViewMode("list")}
-          className="flex items-center gap-2 !bg-transparent !text-[#22C55E] !border-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+          className={`flex items-center gap-2 !border-[#22C55E] ${
+            viewMode === "list"
+              ? "!bg-[#22C55E] !text-black hover:!bg-[#22C55E] hover:!text-black"
+              : "!bg-transparent !text-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+          }`}
           style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
         >
           <List className="h-4 w-4" />
@@ -509,7 +521,7 @@ export function KanbanBoard() {
       </Dialog>
 
       {viewMode === "list" ? (
-        <LeadsListView leads={leads} onLeadsUpdate={handleLeadsUpdate} />
+        <LeadsListView leads={leads} onLeadsUpdate={handleLeadsUpdate} totalLeadsCount={totalLeadsCount} />
       ) : (
         <>
           {/* Filtros - Compactos */}
