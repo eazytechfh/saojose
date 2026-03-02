@@ -458,7 +458,7 @@ export function DashboardCharts() {
                               : "linear-gradient(to right, #fb923c, #b91c1c)",
                       }}
                     >
-                      {index === 0 ? "ðŸ¥‡" : index === 1 ? "ðŸ¥ˆ" : "ðŸ¥‰"}
+                      {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                     </div>
                     <div className="flex-1">
                       <p className="font-bold text-white text-sm">{vendedor.vendedor}</p>
