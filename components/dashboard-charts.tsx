@@ -97,6 +97,12 @@ export function DashboardCharts() {
   const availableVendedores = dashboardData?.availableVendedores || []
   const availableOrigens = dashboardData?.availableOrigens || []
 
+  const formatOrigemLabel = (origem: string) => {
+    const normalized = origem.trim().toUpperCase()
+    if (normalized === "SÓ CARRAO" || normalized === "SO CARRAO") return "SÓ CARRÃO"
+    return origem
+  }
+
   if (loading || !dashboardData) {
     return (
       <div className="space-y-8">
@@ -559,7 +565,7 @@ export function DashboardCharts() {
               </div>
               <div>
                 <span className="text-orange-300 font-bold">Performance por Origem</span>
-                <p className="text-xs text-gray-300 font-normal mt-1">AnÃ¡lise de canais de aquisiÃ§Ã£o</p>
+                <p className="text-xs text-gray-300 font-normal mt-1">Análise de canais de aquisição</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -581,7 +587,7 @@ export function DashboardCharts() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                <XAxis dataKey="origem" tick={{ fontSize: 11, fill: "#e5e7eb" }} />
+                <XAxis dataKey="origem" tick={{ fontSize: 11, fill: "#e5e7eb" }} tickFormatter={formatOrigemLabel} />
                 <YAxis tick={{ fontSize: 11, fill: "#e5e7eb" }} />
                 <Tooltip
                   contentStyle={{
@@ -626,7 +632,7 @@ export function DashboardCharts() {
               {dashboardData.origemStats.slice(0, 4).map((origem, index) => (
                 <div key={origem.origem} className="p-3 bg-black/80 rounded-lg border border-gray-700">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-white">ðŸ“ {origem.origem}</span>
+                    <span className="text-sm font-medium text-white">📍 {formatOrigemLabel(origem.origem)}</span>
                     <Badge className="bg-gradient-to-r from-orange-400 to-red-400 text-white text-xs">
                       {origem.taxa_conversao.toFixed(1)}%
                     </Badge>
