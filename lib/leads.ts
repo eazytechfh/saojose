@@ -350,6 +350,37 @@ export async function updateLeadEmail(leadId: LeadId, newEmail: string): Promise
   }
 }
 
+export async function updateLeadName(leadId: LeadId, newName: string): Promise<boolean> {
+  const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
+  const sanitizedName = newName.trim()
+
+  if (!sanitizedName) {
+    console.error("Lead name cannot be empty")
+    return false
+  }
+
+  try {
+    const { error } = await supabase
+      .from("BASE_DE_LEADS")
+      .update({
+        nome_lead: sanitizedName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadIdForQuery)
+
+    if (error) {
+      console.error("Error updating lead name:", error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error("Unexpected error updating lead name:", error)
+    return false
+  }
+}
+
 export async function updateLeadCpf(leadId: LeadId, newCpf: string): Promise<boolean> {
   const supabase = createClient()
   const leadIdForQuery = normalizeLeadIdForQuery(leadId)

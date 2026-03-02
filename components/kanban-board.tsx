@@ -14,6 +14,7 @@ import {
   getLeads,
   getLeadsTotalCount,
   updateLeadStage,
+  updateLeadName,
   generateResumoComercial,
   deleteLead,
   type Lead,
@@ -40,6 +41,9 @@ import {
   Move,
   AlertTriangle,
   Trash2,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react"
 import { LeadsListView } from "./leads-list-view"
 import { EditableValueField } from "./editable-value-field"
@@ -99,6 +103,9 @@ export function KanbanBoard() {
   const [progressValue, setProgressValue] = useState(0)
   const [visibleColumns, setVisibleColumns] = useState<string[]>(COLUNAS_KANBAN)
   const [totalLeadsCount, setTotalLeadsCount] = useState(0)
+  const [isEditingLeadName, setIsEditingLeadName] = useState(false)
+  const [leadNameInput, setLeadNameInput] = useState("")
+  const [savingLeadName, setSavingLeadName] = useState(false)
 
   useEffect(() => {
     loadLeads()
@@ -114,6 +121,15 @@ export function KanbanBoard() {
   useEffect(() => {
     filterLeads()
   }, [leads, searchTerm, filterOrigem, filterEstagio])
+
+  useEffect(() => {
+    if (selectedLead) {
+      setLeadNameInput(selectedLead.nome || "")
+    } else {
+      setLeadNameInput("")
+    }
+    setIsEditingLeadName(false)
+  }, [selectedLead])
 
   const loadLeads = async () => {
     const user = getCurrentUser()
@@ -425,6 +441,73 @@ export function KanbanBoard() {
     }
   }
 
+  const handleStartEditLead = () => {
+    if (!selectedLead) return
+    setLeadNameInput(selectedLead.nome || "")
+    setIsEditingLeadName(true)
+  }
+
+  const handleCancelEditLead = () => {
+    if (selectedLead) {
+      setLeadNameInput(selectedLead.nome || "")
+    }
+    setIsEditingLeadName(false)
+  }
+
+  const handleSaveLeadName = async () => {
+    if (!selectedLead) return
+
+    const sanitizedName = leadNameInput.trim()
+    if (!sanitizedName) {
+      setResumoMessage({
+        type: "error",
+        text: "O nome do lead não pode ficar vazio.",
+      })
+      setTimeout(() => setResumoMessage(null), 3000)
+      return
+    }
+
+    setSavingLeadName(true)
+    try {
+      const success = await updateLeadName(selectedLead.id, sanitizedName)
+
+      if (!success) {
+        setResumoMessage({
+          type: "error",
+          text: "Erro ao atualizar o nome do lead. Tente novamente.",
+        })
+        setTimeout(() => setResumoMessage(null), 3000)
+        return
+      }
+
+      setLeads((prevLeads) =>
+        prevLeads.map((lead) =>
+          String(lead.id) === String(selectedLead.id)
+            ? { ...lead, nome: sanitizedName, updated_at: new Date().toISOString() }
+            : lead,
+        ),
+      )
+      setSelectedLead((prevLead) =>
+        prevLead ? { ...prevLead, nome: sanitizedName, updated_at: new Date().toISOString() } : prevLead,
+      )
+      setIsEditingLeadName(false)
+
+      setResumoMessage({
+        type: "success",
+        text: "Nome do lead atualizado com sucesso!",
+      })
+      setTimeout(() => setResumoMessage(null), 3000)
+    } catch (_error) {
+      setResumoMessage({
+        type: "error",
+        text: "Erro inesperado ao atualizar o nome do lead.",
+      })
+      setTimeout(() => setResumoMessage(null), 3000)
+    } finally {
+      setSavingLeadName(false)
+    }
+  }
+
   const getLeadsByStage = (stage: string) => {
     return filteredLeads.filter((lead) => lead.estagio_lead === stage)
   }
@@ -704,25 +787,36 @@ export function KanbanBoard() {
                     Detalhes do Lead
                   </div>
                   {selectedLead && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteLead(selectedLead.id)}
-                      disabled={String(deletingLead) === String(selectedLead.id)}
-                      className="flex items-center gap-2"
-                    >
-                      {String(deletingLead) === String(selectedLead.id) ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Excluindo...
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="h-4 w-4" />
-                          Excluir Lead
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={handleStartEditLead}
+                        disabled={isEditingLeadName || String(deletingLead) === String(selectedLead.id)}
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Editar Lead
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteLead(selectedLead.id)}
+                        disabled={String(deletingLead) === String(selectedLead.id) || savingLeadName}
+                        className="flex items-center gap-2"
+                      >
+                        {String(deletingLead) === String(selectedLead.id) ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Excluindo...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4" />
+                            Excluir Lead
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   )}
                 </DialogTitle>
               </DialogHeader>
@@ -732,7 +826,48 @@ export function KanbanBoard() {
                   <div className="flex-shrink-0 space-y-4 pb-4 border-b">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-semibold text-2xl">{selectedLead.nome}</h3>
+                        {isEditingLeadName ? (
+                          <div className="space-y-2">
+                            <Input
+                              value={leadNameInput}
+                              onChange={(e) => setLeadNameInput(e.target.value)}
+                              className="h-10 text-lg font-semibold"
+                              placeholder="Nome do lead"
+                              autoFocus
+                            />
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                onClick={handleSaveLeadName}
+                                disabled={savingLeadName}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                {savingLeadName ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Salvando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Salvar
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={handleCancelEditLead}
+                                disabled={savingLeadName}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Cancelar
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <h3 className="font-semibold text-2xl">{selectedLead.nome}</h3>
+                        )}
                         <Badge
                           className={`mt-2 ${ESTAGIO_COLORS[selectedLead.estagio_lead as keyof typeof ESTAGIO_COLORS]}`}
                         >
