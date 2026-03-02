@@ -347,17 +347,17 @@ export function DashboardCharts() {
                         {item.estagio === "oportunidade"
                           ? "Oportunidade"
                           : item.estagio === "em_qualificacao"
-                            ? "Em QualificaÃ§Ã£o"
+                            ? "Em Qualificação"
                             : item.estagio === "qualificado"
                               ? "Qualificado"
                               : item.estagio === "follow_up"
                                 ? "Follow Up"
                                 : item.estagio === "nutricao"
-                                  ? "NutriÃ§Ã£o"
+                                  ? "Nutrição"
                                   : item.estagio === "fechado"
                                     ? "Fechado"
                                     : item.estagio === "nao_fechou"
-                                      ? "NÃ£o Fechou"
+                                      ? "Não Fechou"
                                       : item.estagio}
                       </span>
                     </div>
@@ -421,7 +421,7 @@ export function DashboardCharts() {
                     const dataKey = entry?.dataKey
                     if (dataKey === "total_leads") return [value, "Total de Leads"]
                     if (dataKey === "leads_fechados") return [value, "Leads Fechados"]
-                    if (dataKey === "taxa_conversao") return [`${Number(value).toFixed(1)}%`, "Taxa de ConversÃ£o (%)"]
+                    if (dataKey === "taxa_conversao") return [`${Number(value).toFixed(1)}%`, "Taxa de Conversão (%)"]
                     return [value, "Valor"]
                   }}
                 />
@@ -436,7 +436,7 @@ export function DashboardCharts() {
                 <Bar
                   dataKey="taxa_conversao"
                   fill="url(#conversaoGradient)"
-                  name="Taxa de ConversÃ£o (%)"
+                  name="Taxa de Conversão (%)"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -463,7 +463,7 @@ export function DashboardCharts() {
                     <div className="flex-1">
                       <p className="font-bold text-white text-sm">{vendedor.vendedor}</p>
                       <p className="text-xs text-gray-300">
-                        {vendedor.total_leads} leads â€¢ {vendedor.taxa_conversao.toFixed(1)}%
+                        {vendedor.total_leads} leads • {vendedor.taxa_conversao.toFixed(1)}%
                       </p>
                     </div>
                   </div>
