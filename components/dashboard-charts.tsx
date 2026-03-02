@@ -689,7 +689,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.oportunidade}
                   fill={`url(#areaoportunidade)`}
-                  name="ðŸŽ¯ Oportunidade"
+                  name="🎯 Oportunidade"
                   strokeWidth={2}
                 />
                 <Area
@@ -698,7 +698,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.em_qualificacao}
                   fill={`url(#areaem_qualificacao)`}
-                  name="â³ Em QualificaÃ§Ã£o"
+                  name="⏳ Em Qualificação"
                   strokeWidth={2}
                 />
                 <Area
@@ -707,7 +707,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.qualificado}
                   fill={`url(#areaqualificado)`}
-                  name="âœ… Qualificado"
+                  name="✅ Qualificado"
                   strokeWidth={2}
                 />
                 <Area
@@ -716,7 +716,7 @@ export function DashboardCharts() {
                   stackId="1"
                   stroke={ESTAGIO_COLORS.fechado}
                   fill={`url(#areafechado)`}
-                  name="ðŸŽ‰ Fechado"
+                  name="🎉 Fechado"
                   strokeWidth={2}
                 />
               </AreaChart>
