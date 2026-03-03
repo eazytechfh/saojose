@@ -82,6 +82,36 @@ function normalizeSellerName(value?: string): string {
     .toLowerCase()
 }
 
+function splitNameTokens(value: string): string[] {
+  return value
+    .split(" ")
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2)
+}
+
+function hasAllTokens(sourceTokens: string[], targetTokens: string[]): boolean {
+  if (sourceTokens.length < 2) return false
+  return sourceTokens.every((token) => targetTokens.includes(token))
+}
+
+function isLeadAssignedToCurrentSeller(leadSeller?: string, currentUserNames?: string[]): boolean {
+  const normalizedLeadSeller = normalizeSellerName(leadSeller)
+  if (!normalizedLeadSeller || !currentUserNames?.length) return false
+
+  const leadTokens = splitNameTokens(normalizedLeadSeller)
+
+  return currentUserNames.some((rawUserName) => {
+    const normalizedUserName = normalizeSellerName(rawUserName)
+    if (!normalizedUserName) return false
+
+    if (normalizedLeadSeller === normalizedUserName) return true
+    if (normalizedLeadSeller.includes(normalizedUserName)) return true
+
+    const userTokens = splitNameTokens(normalizedUserName)
+    return hasAllTokens(userTokens, leadTokens)
+  })
+}
+
 function formatDateSafe(value?: string): string {
   if (!value) return "-"
   const normalized = normalizeDateForInput(value)
@@ -153,7 +183,7 @@ export function KanbanBoard() {
           normalizeSellerName(user.nome_usuario),
           normalizeSellerName((user as { nome?: string }).nome),
         ].filter(Boolean)
-        data = data.filter((lead) => currentUserNames.includes(normalizeSellerName(lead.vendedor)))
+        data = data.filter((lead) => isLeadAssignedToCurrentSeller(lead.vendedor, currentUserNames))
       }
       
       setLeads(data)
