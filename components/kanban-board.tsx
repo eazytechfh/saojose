@@ -72,6 +72,16 @@ const COLUNAS_VENDEDOR = [
   "resgate",
 ]
 
+function normalizeSellerName(value?: string): string {
+  if (!value) return ""
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase()
+}
+
 function formatDateSafe(value?: string): string {
   if (!value) return "-"
   const normalized = normalizeDateForInput(value)
@@ -139,10 +149,11 @@ export function KanbanBoard() {
       
       // Se o usuário for vendedor, filtrar apenas os leads atribuídos a ele
       if (user.cargo === "vendedor") {
-        data = data.filter((lead) => 
-          lead.vendedor?.toLowerCase() === user.nome_usuario?.toLowerCase() ||
-          lead.vendedor?.toLowerCase() === user.nome?.toLowerCase()
-        )
+        const currentUserNames = [
+          normalizeSellerName(user.nome_usuario),
+          normalizeSellerName((user as { nome?: string }).nome),
+        ].filter(Boolean)
+        data = data.filter((lead) => currentUserNames.includes(normalizeSellerName(lead.vendedor)))
       }
       
       setLeads(data)
