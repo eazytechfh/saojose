@@ -77,6 +77,7 @@ function normalizeSellerName(value?: string): string {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/([a-z])\1+/g, "$1")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase()
@@ -91,7 +92,15 @@ function splitNameTokens(value: string): string[] {
 
 function hasAllTokens(sourceTokens: string[], targetTokens: string[]): boolean {
   if (sourceTokens.length < 2) return false
-  return sourceTokens.every((token) => targetTokens.includes(token))
+  return sourceTokens.every((sourceToken) =>
+    targetTokens.some((targetToken) => {
+      if (sourceToken === targetToken) return true
+      if (sourceToken.length >= 4 && targetToken.length >= 4) {
+        return sourceToken.startsWith(targetToken) || targetToken.startsWith(sourceToken)
+      }
+      return false
+    }),
+  )
 }
 
 function isLeadAssignedToCurrentSeller(leadSeller?: string, currentUserNames?: string[]): boolean {
