@@ -87,11 +87,14 @@ export async function POST(request: Request) {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!supabaseUrl || !serviceRoleKey) {
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseKey = serviceRoleKey || anonKey
+
+    if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json({ error: "Configuração do Supabase incompleta no servidor." }, { status: 500 })
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey)
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
     // VENDEDORES: tentativa padrão (colunas minúsculas)
     const { data: existingLower, error: existingLowerError } = await supabase
