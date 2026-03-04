@@ -429,16 +429,26 @@ export async function updateLeadDataNascimento(leadId: LeadId, value: string): P
   const leadIdForQuery = normalizeLeadIdForQuery(leadId)
 
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("BASE_DE_LEADS")
       .update({
         data_nascimento: value || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", leadIdForQuery)
+      .select("id")
+      .maybeSingle()
 
     if (error) {
+      if (error.code === "42703" || error.code === "PGRST204") {
+        console.error('Column "data_nascimento" not found. Run migration scripts/10-add-cpf-data-nascimento.sql')
+      }
       console.error("Error updating lead data_nascimento:", error)
+      return false
+    }
+
+    if (!data) {
+      console.error("No rows updated for lead data_nascimento", { leadId: leadIdForQuery })
       return false
     }
 

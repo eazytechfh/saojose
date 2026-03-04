@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { updateLeadDataNascimento, type LeadId } from "@/lib/leads"
@@ -61,6 +61,11 @@ function formatDateToPtBr(value: string): string {
   return `${day}/${month}/${year}`
 }
 
+function formatDateForEditing(value: string): string {
+  const normalized = normalizeDateForInput(value)
+  return normalized ? formatDateToPtBr(normalized) : ""
+}
+
 export function EditableDataNascimentoField({
   leadId,
   currentValue,
@@ -69,19 +74,25 @@ export function EditableDataNascimentoField({
 }: EditableDataNascimentoFieldProps) {
   const normalizedCurrent = useMemo(() => normalizeDateForInput(currentValue), [currentValue])
   const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(normalizedCurrent)
+  const [editValue, setEditValue] = useState(formatDateForEditing(currentValue))
   const [loading, setLoading] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [errorMessage, setErrorMessage] = useState("")
 
   const handleStartEdit = () => {
     setIsEditing(true)
-    setEditValue(normalizeDateForInput(currentValue))
+    setErrorMessage("")
+    setEditValue(formatDateForEditing(currentValue))
   }
 
   const handleSave = async () => {
+    const normalized = normalizeDateForInput(editValue)
+    if (editValue.trim() && !normalized) {
+      setErrorMessage("Data inválida. Use o formato dd/mm/aaaa.")
+      return
+    }
+
     setLoading(true)
-    const latestInputValue = inputRef.current?.value ?? editValue
-    const normalized = normalizeDateForInput(latestInputValue)
+    setErrorMessage("")
 
     try {
       const success = await updateLeadDataNascimento(leadId, normalized)
@@ -89,18 +100,21 @@ export function EditableDataNascimentoField({
         onDataNascimentoUpdate(normalized)
         setIsEditing(false)
       } else {
-        setEditValue(normalizeDateForInput(currentValue))
+        setEditValue(formatDateForEditing(currentValue))
+        setErrorMessage("Não foi possível salvar. Tente novamente.")
       }
     } catch (error) {
       console.error("Error updating data_nascimento:", error)
-      setEditValue(normalizeDateForInput(currentValue))
+      setEditValue(formatDateForEditing(currentValue))
+      setErrorMessage("Erro ao salvar data de nascimento.")
     } finally {
       setLoading(false)
     }
   }
 
   const handleCancel = () => {
-    setEditValue(normalizeDateForInput(currentValue))
+    setEditValue(formatDateForEditing(currentValue))
+    setErrorMessage("")
     setIsEditing(false)
   }
 
@@ -118,15 +132,17 @@ export function EditableDataNascimentoField({
         <div className="relative flex-1">
           <Calendar className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
           <Input
-            ref={inputRef}
-            type="date"
+            type="text"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
             className="h-7 pl-6 pr-1 text-xs border-blue-300 focus:border-blue-500"
+            placeholder="dd/mm/aaaa"
+            inputMode="numeric"
             autoFocus
             disabled={loading}
           />
+          {errorMessage ? <p className="mt-1 text-[10px] text-red-500">{errorMessage}</p> : null}
         </div>
         <div className="flex gap-1">
           <Button
