@@ -4,53 +4,53 @@ import { createClient } from "@supabase/supabase-js"
 type SyncVendedorStatusPayload = {
   id_empresa?: number
   email?: string
+  nome_usuario?: string
+  telefone?: string | null
   status?: "ativo" | "pendente" | "inativo"
 }
 
-async function updateByLowerId(
-  supabase: ReturnType<typeof createClient>,
-  id: number,
-  status: "ativo" | "pendente" | "inativo",
-) {
-  const ativo = status !== "inativo"
-  const atenderValue = status === "inativo" ? null : "espera"
-
-  const attempts = [
-    { ativo, atender: atenderValue, updated_at: new Date().toISOString() },
-    { ATIVO: ativo, atender: atenderValue, UPDATED_AT: new Date().toISOString() },
-  ]
-
-  let lastError: any = null
-  for (const payload of attempts) {
-    const { error } = await supabase.from("VENDEDORES").update(payload).eq("id", id)
-    if (!error) return { ok: true }
-    lastError = error
-  }
-
-  return { ok: false, error: lastError?.message || "Falha ao atualizar vendedor por id." }
+type Filter = {
+  column: string
+  op: "eq" | "ilike"
+  value: string | number | boolean
 }
 
-async function updateByUpperId(
-  supabase: ReturnType<typeof createClient>,
-  id: number,
-  status: "ativo" | "pendente" | "inativo",
-) {
+function buildStatusPayloads(status: "ativo" | "pendente" | "inativo") {
   const ativo = status !== "inativo"
-  const atenderValue = status === "inativo" ? null : "espera"
+  const atender = status === "inativo" ? null : "espera"
+  const now = new Date().toISOString()
 
-  const attempts = [
-    { ATIVO: ativo, atender: atenderValue, UPDATED_AT: new Date().toISOString() },
-    { ativo, atender: atenderValue, updated_at: new Date().toISOString() },
+  return [
+    { ativo, atender, updated_at: now },
+    { ATIVO: ativo, atender, UPDATED_AT: now },
   ]
+}
 
+async function tryUpdateWithFilters(
+  supabase: ReturnType<typeof createClient>,
+  payloads: Array<Record<string, any>>,
+  filtersList: Filter[][],
+): Promise<{ ok: boolean; error?: string }> {
   let lastError: any = null
-  for (const payload of attempts) {
-    const { error } = await supabase.from("VENDEDORES").update(payload).eq("ID_VENDEDOR", id)
-    if (!error) return { ok: true }
-    lastError = error
+
+  for (const filters of filtersList) {
+    for (const payload of payloads) {
+      let query: any = supabase.from("VENDEDORES").update(payload)
+      for (const filter of filters) {
+        query = filter.op === "ilike" ? query.ilike(filter.column, String(filter.value)) : query.eq(filter.column, filter.value)
+      }
+
+      const { data, error } = await query.select("*").limit(1)
+      if (!error && Array.isArray(data) && data.length > 0) {
+        return { ok: true }
+      }
+      if (error) {
+        lastError = error
+      }
+    }
   }
 
-  return { ok: false, error: lastError?.message || "Falha ao atualizar vendedor por ID_VENDEDOR." }
+  return { ok: false, error: lastError?.message || "Não foi possível localizar vendedor para atualizar status." }
 }
 
 export async function POST(request: Request) {
@@ -58,13 +58,12 @@ export async function POST(request: Request) {
     const body: SyncVendedorStatusPayload = await request.json()
     const idEmpresa = Number(body.id_empresa)
     const email = String(body.email || "").trim()
+    const nomeUsuario = String(body.nome_usuario || "").trim()
+    const telefone = String(body.telefone || "").trim()
     const status = body.status || "ativo"
 
     if (!Number.isFinite(idEmpresa) || idEmpresa <= 0) {
       return NextResponse.json({ error: "id_empresa inválido." }, { status: 400 })
-    }
-    if (!email) {
-      return NextResponse.json({ error: "email é obrigatório." }, { status: 400 })
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -77,37 +76,57 @@ export async function POST(request: Request) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey)
+    const payloads = buildStatusPayloads(status)
 
-    const { data: lowerSeller, error: lowerSellerError } = await supabase
-      .from("VENDEDORES")
-      .select("id")
-      .eq("id_empresa", idEmpresa)
-      .eq("email", email)
-      .maybeSingle()
+    const filtersList: Filter[][] = []
 
-    if (!lowerSellerError && lowerSeller?.id) {
-      const result = await updateByLowerId(supabase, lowerSeller.id, status)
-      if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 })
-      return NextResponse.json({ success: true })
+    if (email) {
+      filtersList.push(
+        [
+          { column: "id_empresa", op: "eq", value: idEmpresa },
+          { column: "email", op: "ilike", value: email },
+        ],
+        [
+          { column: "ID_EMPRESA", op: "eq", value: idEmpresa },
+          { column: "EMAIL", op: "ilike", value: email },
+        ],
+      )
     }
 
-    const { data: upperSeller, error: upperSellerError } = await supabase
-      .from("VENDEDORES")
-      .select("ID_VENDEDOR")
-      .eq("ID_EMPRESA", idEmpresa)
-      .eq("EMAIL", email)
-      .maybeSingle()
-
-    if (upperSellerError) {
-      return NextResponse.json({ error: upperSellerError.message }, { status: 500 })
+    if (nomeUsuario) {
+      filtersList.push(
+        [
+          { column: "id_empresa", op: "eq", value: idEmpresa },
+          { column: "nome", op: "ilike", value: nomeUsuario },
+        ],
+        [
+          { column: "ID_EMPRESA", op: "eq", value: idEmpresa },
+          { column: "NOME", op: "ilike", value: nomeUsuario },
+        ],
+      )
     }
 
-    if (!upperSeller?.ID_VENDEDOR) {
-      return NextResponse.json({ success: true })
+    if (telefone) {
+      filtersList.push(
+        [
+          { column: "id_empresa", op: "eq", value: idEmpresa },
+          { column: "telefone", op: "eq", value: telefone },
+        ],
+        [
+          { column: "ID_EMPRESA", op: "eq", value: idEmpresa },
+          { column: "TELEFONE", op: "eq", value: telefone },
+        ],
+      )
     }
 
-    const result = await updateByUpperId(supabase, upperSeller.ID_VENDEDOR, status)
-    if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 })
+    if (filtersList.length === 0) {
+      return NextResponse.json({ error: "Dados insuficientes para localizar vendedor." }, { status: 400 })
+    }
+
+    const result = await tryUpdateWithFilters(supabase, payloads, filtersList)
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

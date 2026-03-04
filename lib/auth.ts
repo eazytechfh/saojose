@@ -319,7 +319,7 @@ export async function updateMemberStatus(
 
   const { data: memberData, error: memberError } = await supabase
     .from("AUTORIZAÇÃO")
-    .select("id_empresa, email, cargo")
+    .select("id_empresa, email, cargo, nome_usuario, telefone")
     .eq("id", memberId)
     .eq("id_empresa", currentUser.id_empresa)
     .maybeSingle()
@@ -339,6 +339,8 @@ export async function updateMemberStatus(
         body: JSON.stringify({
           id_empresa: memberData.id_empresa,
           email: memberData.email,
+          nome_usuario: memberData.nome_usuario,
+          telefone: memberData.telefone || null,
           status,
         }),
       })
