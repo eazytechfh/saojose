@@ -442,7 +442,26 @@ export async function updateLeadDataNascimento(leadId: LeadId, value: string): P
         console.error('Column "data_nascimento" not found. Run migration scripts/10-add-cpf-data-nascimento.sql')
       }
       console.error("Error updating lead data_nascimento:", error)
-      return false
+
+      // Fallback server-side usando service role para cenários de permissão no client (anon key/RLS).
+      try {
+        const response = await fetch("/api/leads/update-data-nascimento", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leadId: leadIdForQuery, value: value || null }),
+        })
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}))
+          console.error("Fallback API failed updating lead data_nascimento:", payload)
+          return false
+        }
+
+        return true
+      } catch (fallbackError) {
+        console.error("Unexpected fallback error updating lead data_nascimento:", fallbackError)
+        return false
+      }
     }
 
     return true
