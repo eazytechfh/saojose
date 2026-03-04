@@ -77,10 +77,10 @@ function normalizeSellerName(value?: string): string {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/([a-z])\1+/g, "$1")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase()
+    .replace(/([a-z])\1+/g, "$1")
 }
 
 function splitNameTokens(value: string): string[] {
