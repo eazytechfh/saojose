@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { updateLeadDataNascimento, type LeadId } from "@/lib/leads"
@@ -71,6 +71,7 @@ export function EditableDataNascimentoField({
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(normalizedCurrent)
   const [loading, setLoading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleStartEdit = () => {
     setIsEditing(true)
@@ -79,7 +80,8 @@ export function EditableDataNascimentoField({
 
   const handleSave = async () => {
     setLoading(true)
-    const normalized = normalizeDateForInput(editValue)
+    const latestInputValue = inputRef.current?.value ?? editValue
+    const normalized = normalizeDateForInput(latestInputValue)
 
     try {
       const success = await updateLeadDataNascimento(leadId, normalized)
@@ -116,6 +118,7 @@ export function EditableDataNascimentoField({
         <div className="relative flex-1">
           <Calendar className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
           <Input
+            ref={inputRef}
             type="date"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
@@ -126,10 +129,17 @@ export function EditableDataNascimentoField({
           />
         </div>
         <div className="flex gap-1">
-          <Button size="sm" onClick={handleSave} disabled={loading} className="h-7 w-7 p-0 bg-blue-600 hover:bg-blue-700">
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleSave}
+            disabled={loading}
+            className="h-7 w-7 p-0 bg-blue-600 hover:bg-blue-700"
+          >
             <Check className="h-3 w-3" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant="outline"
             onClick={handleCancel}
