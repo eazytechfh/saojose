@@ -156,7 +156,7 @@ export async function POST(request: Request) {
             NOME: nomeUsuario,
             TELEFONE: telefone,
             CARGO: cargo,
-            ATENDER: status,
+            atender: status,
             ATIVO: true,
             UPDATED_AT: new Date().toISOString(),
           })
@@ -171,7 +171,7 @@ export async function POST(request: Request) {
           TELEFONE: telefone,
           EMAIL: email,
           CARGO: cargo,
-          ATENDER: status,
+          atender: status,
           ID_EMPRESA: idEmpresa,
           ATIVO: true,
         })
