@@ -61,6 +61,12 @@ async function tryInsertAtender(
     lastError = error
   }
 
+  // Se a tabela ATENDER não existir neste ambiente, não bloqueia o fluxo:
+  // o status já é persistido em VENDEDORES.atender.
+  if (lastError?.code === "PGRST205" || lastError?.code === "42P01") {
+    return { ok: true }
+  }
+
   return { ok: false, error: lastError?.message || "Falha ao inserir na tabela ATENDER." }
 }
 
