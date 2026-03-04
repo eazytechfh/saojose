@@ -234,6 +234,8 @@ export async function addCompanyMember(memberData: {
     }
   }
 
+  const createdMember = Array.isArray(data) && data.length > 0 ? data[0] : null
+
   // Quando o membro é vendedor, também precisa existir em VENDEDORES e ATENDER.
   if ((memberData.cargo || "convidado") === "vendedor") {
     try {
@@ -244,9 +246,9 @@ export async function addCompanyMember(memberData: {
         },
         body: JSON.stringify({
           id_empresa: memberData.id_empresa,
-          nome_usuario: memberData.nome_usuario,
-          email: memberData.email,
-          telefone: memberData.telefone || null,
+          nome_usuario: createdMember?.nome_usuario || memberData.nome_usuario,
+          email: createdMember?.email || memberData.email,
+          telefone: createdMember?.telefone || memberData.telefone || null,
           cargo: memberData.cargo || "vendedor",
           status: "espera",
         }),
@@ -255,7 +257,7 @@ export async function addCompanyMember(memberData: {
       if (!syncResponse.ok) {
         const syncPayload = await syncResponse.json().catch(() => ({}))
         const syncError = syncPayload?.error || "Erro ao sincronizar vendedor nas tabelas auxiliares."
-        const insertedMemberId = Array.isArray(data) && data[0]?.id ? data[0].id : null
+        const insertedMemberId = createdMember?.id || null
         if (insertedMemberId) {
           const { error: rollbackError } = await supabase
             .from("AUTORIZAÇÃO")
@@ -270,7 +272,7 @@ export async function addCompanyMember(memberData: {
       }
     } catch (syncError) {
       console.error("Error syncing vendedor tables:", syncError)
-      const insertedMemberId = Array.isArray(data) && data[0]?.id ? data[0].id : null
+      const insertedMemberId = createdMember?.id || null
       if (insertedMemberId) {
         const { error: rollbackError } = await supabase
           .from("AUTORIZAÇÃO")
@@ -339,6 +341,46 @@ export async function updateMemberCargo(
   if (error) {
     console.error("Error updating member cargo:", error)
     return { success: false, error: "Erro ao atualizar cargo do membro." }
+  }
+
+  if (cargo === "vendedor") {
+    const { data: memberData, error: memberError } = await supabase
+      .from("AUTORIZAÇÃO")
+      .select("id_empresa, nome_usuario, email, telefone")
+      .eq("id", memberId)
+      .eq("id_empresa", currentUser.id_empresa)
+      .maybeSingle()
+
+    if (memberError || !memberData) {
+      console.error("Error fetching member data for vendedor sync:", memberError)
+      return { success: false, error: "Cargo atualizado, mas falhou ao sincronizar dados do vendedor." }
+    }
+
+    try {
+      const syncResponse = await fetch("/api/members/sync-vendedor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id_empresa: memberData.id_empresa,
+          nome_usuario: memberData.nome_usuario,
+          email: memberData.email,
+          telefone: memberData.telefone || null,
+          cargo: "vendedor",
+          status: "espera",
+        }),
+      })
+
+      if (!syncResponse.ok) {
+        const syncPayload = await syncResponse.json().catch(() => ({}))
+        const syncError = syncPayload?.error || "Falha ao sincronizar vendedor nas tabelas auxiliares."
+        return { success: false, error: syncError }
+      }
+    } catch (syncError) {
+      console.error("Error syncing vendedor after cargo update:", syncError)
+      return { success: false, error: "Cargo atualizado, mas falhou ao sincronizar vendedor." }
+    }
   }
 
   return { success: true }
