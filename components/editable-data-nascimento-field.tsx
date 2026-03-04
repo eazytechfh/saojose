@@ -117,7 +117,7 @@ export function EditableDataNascimentoField({
           <Calendar className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
           <Input
             type="date"
-            value={normalizeDateForInput(editValue)}
+            value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
             className="h-7 pl-6 pr-1 text-xs border-blue-300 focus:border-blue-500"
