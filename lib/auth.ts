@@ -152,6 +152,7 @@ export async function addCompanyMember(memberData: {
   email: string
   senha: string
   telefone?: string
+  link_grupo?: string
   status?: "ativo" | "pendente" | "inativo"
   cargo?: "administrador" | "convidado" | "sdr" | "gestor" | "vendedor"
 }): Promise<{ success: boolean; error?: string }> {
@@ -249,6 +250,7 @@ export async function addCompanyMember(memberData: {
           nome_usuario: createdMember?.nome_usuario || memberData.nome_usuario,
           email: createdMember?.email || memberData.email,
           telefone: createdMember?.telefone || memberData.telefone || null,
+          link_grupo: memberData.link_grupo || "",
           cargo: memberData.cargo || "vendedor",
           status: "espera",
         }),
@@ -367,6 +369,7 @@ export async function updateMemberCargo(
           nome_usuario: memberData.nome_usuario,
           email: memberData.email,
           telefone: memberData.telefone || null,
+          link_grupo: "",
           cargo: "vendedor",
           status: "espera",
         }),

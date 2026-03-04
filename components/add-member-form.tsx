@@ -25,6 +25,7 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
     email: "",
     senha: "",
     telefone: "",
+    link_grupo: "",
     status: "ativo" as "ativo" | "pendente" | "inativo",
     cargo: "convidado" as "administrador" | "convidado" | "sdr" | "gestor" | "vendedor",
   })
@@ -55,6 +56,12 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
       return
     }
 
+    if (formData.cargo === "vendedor" && !formData.link_grupo.trim()) {
+      setError("Link do Grupo e obrigatorio para cargo Vendedor")
+      setLoading(false)
+      return
+    }
+
     try {
       const result = await addCompanyMember({
         id_empresa: currentUser.id_empresa,
@@ -75,6 +82,7 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
               nome_usuario: formData.nome_usuario,
               email: formData.email,
               telefone: formData.telefone,
+              link_grupo: formData.link_grupo,
               cargo: formData.cargo,
               status: formData.status,
               data_cadastro: new Date().toISOString(),
@@ -92,6 +100,7 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
           email: "",
           senha: "",
           telefone: "",
+          link_grupo: "",
           status: "ativo",
           cargo: "convidado",
         })
@@ -129,6 +138,7 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
       email: "",
       senha: "",
       telefone: "",
+      link_grupo: "",
       status: "ativo",
       cargo: "convidado",
     })
@@ -216,7 +226,15 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
 
           <div>
             <Label htmlFor="cargo">Cargo *</Label>
-            <Select value={formData.cargo} onValueChange={(value) => handleChange("cargo", value)}>
+            <Select
+              value={formData.cargo}
+              onValueChange={(value) => {
+                handleChange("cargo", value)
+                if (value !== "vendedor") {
+                  handleChange("link_grupo", "")
+                }
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o cargo" />
               </SelectTrigger>
@@ -232,6 +250,20 @@ export function AddMemberForm({ isOpen, onClose, onSuccess, currentUser }: AddMe
               </SelectContent>
             </Select>
           </div>
+
+          {formData.cargo === "vendedor" && (
+            <div>
+              <Label htmlFor="link_grupo">Link do Grupo *</Label>
+              <Input
+                id="link_grupo"
+                type="url"
+                value={formData.link_grupo}
+                onChange={(e) => handleChange("link_grupo", e.target.value)}
+                placeholder="https://chat.whatsapp.com/..."
+                required
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="status">Status *</Label>

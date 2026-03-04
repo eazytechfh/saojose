@@ -6,6 +6,7 @@ type SyncVendedorPayload = {
   nome_usuario?: string
   email?: string
   telefone?: string | null
+  link_grupo?: string | null
   cargo?: string
   status?: string
 }
@@ -70,6 +71,47 @@ async function tryInsertAtender(
   return { ok: false, error: lastError?.message || "Falha ao inserir na tabela ATENDER." }
 }
 
+async function tryUpdateVendedoresById(
+  supabase: ReturnType<typeof createClient>,
+  id: number,
+  payloads: Array<Record<string, any>>,
+): Promise<{ ok: boolean; error?: string }> {
+  let lastError: any = null
+  for (const payload of payloads) {
+    const { error } = await supabase.from("VENDEDORES").update(payload).eq("id", id)
+    if (!error) return { ok: true }
+    lastError = error
+  }
+  return { ok: false, error: lastError?.message || "Falha ao atualizar VENDEDORES." }
+}
+
+async function tryInsertVendedores(
+  supabase: ReturnType<typeof createClient>,
+  payloads: Array<Record<string, any>>,
+): Promise<{ ok: boolean; error?: string }> {
+  let lastError: any = null
+  for (const payload of payloads) {
+    const { error } = await supabase.from("VENDEDORES").insert(payload)
+    if (!error) return { ok: true }
+    lastError = error
+  }
+  return { ok: false, error: lastError?.message || "Falha ao inserir em VENDEDORES." }
+}
+
+async function tryUpdateVendedoresByUpperId(
+  supabase: ReturnType<typeof createClient>,
+  id: number,
+  payloads: Array<Record<string, any>>,
+): Promise<{ ok: boolean; error?: string }> {
+  let lastError: any = null
+  for (const payload of payloads) {
+    const { error } = await supabase.from("VENDEDORES").update(payload).eq("ID_VENDEDOR", id)
+    if (!error) return { ok: true }
+    lastError = error
+  }
+  return { ok: false, error: lastError?.message || "Falha ao atualizar VENDEDORES." }
+}
+
 export async function POST(request: Request) {
   try {
     const body: SyncVendedorPayload = await request.json()
@@ -78,6 +120,7 @@ export async function POST(request: Request) {
     const nomeUsuario = String(body.nome_usuario || "").trim()
     const email = String(body.email || "").trim()
     const telefone = body.telefone || null
+    const linkGrupo = String(body.link_grupo || "").trim()
     const cargo = String(body.cargo || "vendedor").trim() || "vendedor"
     const status = String(body.status || "espera").trim() || "espera"
 
@@ -112,34 +155,60 @@ export async function POST(request: Request) {
 
     if (!existingLowerError) {
       if (existingLower?.id) {
-        const { error: updateLowerError } = await supabase
-          .from("VENDEDORES")
-          .update({
+        const updateLower = await tryUpdateVendedoresById(supabase, existingLower.id, [
+          {
             nome: nomeUsuario,
             telefone: telefone,
             cargo: cargo,
             atender: status,
+            link_grupo: linkGrupo || null,
+            quanto_lead: 0,
             ativo: true,
             updated_at: new Date().toISOString(),
-          })
-          .eq("id", existingLower.id)
+          },
+          {
+            nome: nomeUsuario,
+            telefone: telefone,
+            cargo: cargo,
+            atender: status,
+            "link grupo": linkGrupo || null,
+            "quanto lead": 0,
+            ativo: true,
+            updated_at: new Date().toISOString(),
+          },
+        ])
 
-        if (updateLowerError) {
-          return NextResponse.json({ error: updateLowerError.message }, { status: 500 })
+        if (!updateLower.ok) {
+          return NextResponse.json({ error: updateLower.error }, { status: 500 })
         }
       } else {
-        const { error: insertLowerError } = await supabase.from("VENDEDORES").insert({
-          nome: nomeUsuario,
-          telefone: telefone,
-          email: email,
-          cargo: cargo,
-          atender: status,
-          id_empresa: idEmpresa,
-          ativo: true,
-        })
+        const insertLower = await tryInsertVendedores(supabase, [
+          {
+            nome: nomeUsuario,
+            telefone: telefone,
+            email: email,
+            cargo: cargo,
+            atender: status,
+            link_grupo: linkGrupo || null,
+            quanto_lead: 0,
+            id_empresa: idEmpresa,
+            ativo: true,
+          },
+          {
+            nome: nomeUsuario,
+            telefone: telefone,
+            email: email,
+            cargo: cargo,
+            atender: status,
+            "link grupo": linkGrupo || null,
+            "quanto lead": 0,
+            id_empresa: idEmpresa,
+            ativo: true,
+          },
+        ])
 
-        if (insertLowerError) {
-          return NextResponse.json({ error: insertLowerError.message }, { status: 500 })
+        if (!insertLower.ok) {
+          return NextResponse.json({ error: insertLower.error }, { status: 500 })
         }
       }
     } else {
@@ -156,34 +225,60 @@ export async function POST(request: Request) {
       }
 
       if (existingUpper?.ID_VENDEDOR) {
-        const { error: updateUpperError } = await supabase
-          .from("VENDEDORES")
-          .update({
+        const updateUpper = await tryUpdateVendedoresByUpperId(supabase, existingUpper.ID_VENDEDOR, [
+          {
             NOME: nomeUsuario,
             TELEFONE: telefone,
             CARGO: cargo,
             atender: status,
+            link_grupo: linkGrupo || null,
+            quanto_lead: 0,
             ATIVO: true,
             UPDATED_AT: new Date().toISOString(),
-          })
-          .eq("ID_VENDEDOR", existingUpper.ID_VENDEDOR)
+          },
+          {
+            NOME: nomeUsuario,
+            TELEFONE: telefone,
+            CARGO: cargo,
+            atender: status,
+            "link grupo": linkGrupo || null,
+            "quanto lead": 0,
+            ATIVO: true,
+            UPDATED_AT: new Date().toISOString(),
+          },
+        ])
 
-        if (updateUpperError) {
-          return NextResponse.json({ error: updateUpperError.message }, { status: 500 })
+        if (!updateUpper.ok) {
+          return NextResponse.json({ error: updateUpper.error }, { status: 500 })
         }
       } else {
-        const { error: insertUpperError } = await supabase.from("VENDEDORES").insert({
-          NOME: nomeUsuario,
-          TELEFONE: telefone,
-          EMAIL: email,
-          CARGO: cargo,
-          atender: status,
-          ID_EMPRESA: idEmpresa,
-          ATIVO: true,
-        })
+        const insertUpper = await tryInsertVendedores(supabase, [
+          {
+            NOME: nomeUsuario,
+            TELEFONE: telefone,
+            EMAIL: email,
+            CARGO: cargo,
+            atender: status,
+            link_grupo: linkGrupo || null,
+            quanto_lead: 0,
+            ID_EMPRESA: idEmpresa,
+            ATIVO: true,
+          },
+          {
+            NOME: nomeUsuario,
+            TELEFONE: telefone,
+            EMAIL: email,
+            CARGO: cargo,
+            atender: status,
+            "link grupo": linkGrupo || null,
+            "quanto lead": 0,
+            ID_EMPRESA: idEmpresa,
+            ATIVO: true,
+          },
+        ])
 
-        if (insertUpperError) {
-          return NextResponse.json({ error: insertUpperError.message }, { status: 500 })
+        if (!insertUpper.ok) {
+          return NextResponse.json({ error: insertUpper.error }, { status: 500 })
         }
       }
     }
