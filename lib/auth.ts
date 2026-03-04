@@ -234,6 +234,57 @@ export async function addCompanyMember(memberData: {
     }
   }
 
+  // Quando o membro é vendedor, também precisa existir em VENDEDORES e ATENDER.
+  if ((memberData.cargo || "convidado") === "vendedor") {
+    try {
+      const syncResponse = await fetch("/api/members/sync-vendedor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id_empresa: memberData.id_empresa,
+          nome_usuario: memberData.nome_usuario,
+          email: memberData.email,
+          telefone: memberData.telefone || null,
+          cargo: memberData.cargo || "vendedor",
+          status: "espera",
+        }),
+      })
+
+      if (!syncResponse.ok) {
+        const syncPayload = await syncResponse.json().catch(() => ({}))
+        const syncError = syncPayload?.error || "Erro ao sincronizar vendedor nas tabelas auxiliares."
+        const insertedMemberId = Array.isArray(data) && data[0]?.id ? data[0].id : null
+        if (insertedMemberId) {
+          const { error: rollbackError } = await supabase
+            .from("AUTORIZAÇÃO")
+            .delete()
+            .eq("id", insertedMemberId)
+            .eq("id_empresa", memberData.id_empresa)
+          if (rollbackError) {
+            console.error("Error rolling back member after sync failure:", rollbackError)
+          }
+        }
+        return { success: false, error: syncError }
+      }
+    } catch (syncError) {
+      console.error("Error syncing vendedor tables:", syncError)
+      const insertedMemberId = Array.isArray(data) && data[0]?.id ? data[0].id : null
+      if (insertedMemberId) {
+        const { error: rollbackError } = await supabase
+          .from("AUTORIZAÇÃO")
+          .delete()
+          .eq("id", insertedMemberId)
+          .eq("id_empresa", memberData.id_empresa)
+        if (rollbackError) {
+          console.error("Error rolling back member after sync exception:", rollbackError)
+        }
+      }
+      return { success: false, error: "Erro ao sincronizar vendedor nas tabelas auxiliares." }
+    }
+  }
+
   return { success: true }
 }
 
