@@ -317,6 +317,43 @@ export async function updateMemberStatus(
     return { success: false, error: "Erro ao atualizar status do membro." }
   }
 
+  const { data: memberData, error: memberError } = await supabase
+    .from("AUTORIZAÇÃO")
+    .select("id_empresa, email, cargo")
+    .eq("id", memberId)
+    .eq("id_empresa", currentUser.id_empresa)
+    .maybeSingle()
+
+  if (memberError) {
+    console.error("Error fetching member after status update:", memberError)
+    return { success: false, error: "Status atualizado, mas falhou ao sincronizar vendedor." }
+  }
+
+  if (memberData?.cargo === "vendedor") {
+    try {
+      const syncResponse = await fetch("/api/members/sync-vendedor-status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id_empresa: memberData.id_empresa,
+          email: memberData.email,
+          status,
+        }),
+      })
+
+      if (!syncResponse.ok) {
+        const syncPayload = await syncResponse.json().catch(() => ({}))
+        const syncError = syncPayload?.error || "Falha ao sincronizar status do vendedor."
+        return { success: false, error: syncError }
+      }
+    } catch (syncError) {
+      console.error("Error syncing vendedor status:", syncError)
+      return { success: false, error: "Status atualizado, mas falhou ao sincronizar vendedor." }
+    }
+  }
+
   return { success: true }
 }
 
