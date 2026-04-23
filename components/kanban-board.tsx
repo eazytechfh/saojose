@@ -44,6 +44,7 @@ import {
   Pencil,
   Check,
   X,
+  Download,
 } from "lucide-react"
 import { LeadsListView } from "./leads-list-view"
 import { EditableValueField } from "./editable-value-field"
@@ -134,6 +135,12 @@ function formatDateSafe(value?: string): string {
   return fallbackDate.toLocaleDateString("pt-BR")
 }
 
+function escapeCsvValue(value: unknown): string {
+  if (value === null || value === undefined) return ""
+  const normalized = String(value).replace(/"/g, '""')
+  return /[",;\n]/.test(normalized) ? `"${normalized}"` : normalized
+}
+
 export function KanbanBoard() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([])
@@ -142,6 +149,9 @@ export function KanbanBoard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterOrigem, setFilterOrigem] = useState("")
   const [filterEstagio, setFilterEstagio] = useState("")
+  const [filterVendedor, setFilterVendedor] = useState("")
+  const [filterDataInicio, setFilterDataInicio] = useState("")
+  const [filterDataFim, setFilterDataFim] = useState("")
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban")
   const [generatingResumo, setGeneratingResumo] = useState(false)
   const [resumoMessage, setResumoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -169,7 +179,7 @@ export function KanbanBoard() {
 
   useEffect(() => {
     filterLeads()
-  }, [leads, searchTerm, filterOrigem, filterEstagio])
+  }, [leads, searchTerm, filterOrigem, filterEstagio, filterVendedor, filterDataInicio, filterDataFim])
 
   useEffect(() => {
     if (selectedLead) {
@@ -219,6 +229,29 @@ export function KanbanBoard() {
 
     if (filterEstagio && filterEstagio !== "all") {
       filtered = filtered.filter((lead) => lead.estagio_lead === filterEstagio)
+    }
+
+    if (filterVendedor && filterVendedor !== "all") {
+      filtered = filtered.filter((lead) => lead.vendedor === filterVendedor)
+    }
+
+    if (filterDataInicio) {
+      const dataInicio = new Date(filterDataInicio)
+      filtered = filtered.filter((lead) => {
+        if (!lead.created_at) return false
+        const leadDate = new Date(lead.created_at)
+        return leadDate >= dataInicio
+      })
+    }
+
+    if (filterDataFim) {
+      const dataFim = new Date(filterDataFim)
+      dataFim.setHours(23, 59, 59, 999) // Incluir todo o dia final
+      filtered = filtered.filter((lead) => {
+        if (!lead.created_at) return false
+        const leadDate = new Date(lead.created_at)
+        return leadDate <= dataFim
+      })
     }
 
     setFilteredLeads(filtered)
@@ -568,9 +601,55 @@ export function KanbanBoard() {
   }
 
   const origens = [...new Set(leads.map((lead) => lead.origem).filter(Boolean))]
+  const vendedores = [...new Set(leads.map((lead) => lead.vendedor).filter(Boolean))].sort()
 
   const handleLeadsUpdate = () => {
     loadLeads()
+  }
+
+  const handleExportCsv = () => {
+    const headers = [
+      "Nome",
+      "Telefone",
+      "Email",
+      "CPF",
+      "Data Nascimento",
+      "Origem",
+      "Vendedor",
+      "Veiculo",
+      "Estagio",
+      "Valor",
+      "Observacao",
+      "Criado em",
+      "Atualizado em",
+    ]
+
+    const rows = filteredLeads.map((lead) => [
+      lead.nome,
+      lead.telefone,
+      lead.email,
+      lead.cpf,
+      formatDateSafe(lead.data_nascimento),
+      lead.origem,
+      lead.vendedor,
+      lead.veiculo_interesse,
+      ESTAGIO_LABELS[lead.estagio_lead as keyof typeof ESTAGIO_LABELS] || lead.estagio_lead,
+      lead.valor ?? 0,
+      lead.observacao_vendedor,
+      formatDateSafe(lead.created_at),
+      formatDateSafe(lead.updated_at),
+    ])
+
+    const csv = [headers, ...rows].map((row) => row.map((value) => escapeCsvValue(value)).join(";")).join("\n")
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `negociacoes-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -594,36 +673,118 @@ export function KanbanBoard() {
 
   return (
     <div className="space-y-2 h-full flex flex-col">
-      {/* View Toggle - Compacto */}
-      <div className="flex gap-2 pb-2">
-        <Button
-          variant={viewMode === "kanban" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setViewMode("kanban")}
-          className={`flex items-center gap-2 !border-[#22C55E] ${
-            viewMode === "kanban"
-              ? "!bg-[#22C55E] !text-black hover:!bg-[#22C55E] hover:!text-black"
-              : "!bg-transparent !text-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
-          }`}
-          style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
-        >
-          <LayoutGrid className="h-4 w-4" />
-          Kanban
-        </Button>
-        <Button
-          variant={viewMode === "list" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setViewMode("list")}
-          className={`flex items-center gap-2 !border-[#22C55E] ${
-            viewMode === "list"
-              ? "!bg-[#22C55E] !text-black hover:!bg-[#22C55E] hover:!text-black"
-              : "!bg-transparent !text-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
-          }`}
-          style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
-        >
-          <List className="h-4 w-4" />
-          Lista
-        </Button>
+      {/* View Toggle + Filtros Compartilhados */}
+      <div className="flex flex-col gap-3 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "kanban" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("kanban")}
+              className={`flex items-center gap-2 !border-[#22C55E] ${
+                viewMode === "kanban"
+                  ? "!bg-[#22C55E] !text-black hover:!bg-[#22C55E] hover:!text-black"
+                  : "!bg-transparent !text-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+              }`}
+              style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Kanban
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={`flex items-center gap-2 !border-[#22C55E] ${
+                viewMode === "list"
+                  ? "!bg-[#22C55E] !text-black hover:!bg-[#22C55E] hover:!text-black"
+                  : "!bg-transparent !text-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+              }`}
+              style={{ display: "inline-flex", visibility: "visible", opacity: 1 }}
+            >
+              <List className="h-4 w-4" />
+              Lista
+            </Button>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={filteredLeads.length === 0}
+            className="flex items-center gap-2 !border-[#22C55E] !bg-transparent !text-[#22C55E] hover:!bg-[#22C55E] hover:!text-black"
+          >
+            <Download className="h-4 w-4" />
+            Exportar CSV
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Buscar por nome, telefone ou vendedor..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-9 text-xs"
+            />
+          </div>
+          <Select value={filterOrigem} onValueChange={setFilterOrigem}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Filtrar por origem" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as origens</SelectItem>
+              {origens.map((origem) => (
+                <SelectItem key={origem} value={origem!}>
+                  {origem}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterEstagio} onValueChange={setFilterEstagio}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Filtrar por estágio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os estágios</SelectItem>
+              {Object.entries(ESTAGIO_LABELS).map(([key, label]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterVendedor} onValueChange={setFilterVendedor}>
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Filtrar por vendedor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os vendedores</SelectItem>
+              {vendedores.map((vendedor) => (
+                <SelectItem key={vendedor} value={vendedor!}>
+                  {vendedor}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            type="date"
+            value={filterDataInicio}
+            onChange={(e) => setFilterDataInicio(e.target.value)}
+            className="h-9 text-xs"
+            placeholder="Data Início"
+            title="Data Início"
+          />
+          <Input
+            type="date"
+            value={filterDataFim}
+            onChange={(e) => setFilterDataFim(e.target.value)}
+            className="h-9 text-xs"
+            placeholder="Data Fim"
+            title="Data Fim"
+          />
+        </div>
       </div>
 
       {/* Mensagem de Status - Inline */}
@@ -654,11 +815,11 @@ export function KanbanBoard() {
       </Dialog>
 
       {viewMode === "list" ? (
-        <LeadsListView leads={leads} onLeadsUpdate={handleLeadsUpdate} totalLeadsCount={totalLeadsCount} />
+        <LeadsListView leads={filteredLeads} onLeadsUpdate={handleLeadsUpdate} totalLeadsCount={totalLeadsCount} />
       ) : (
         <>
           {/* Filtros - Compactos */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div className="hidden grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -694,6 +855,35 @@ export function KanbanBoard() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={filterVendedor} onValueChange={setFilterVendedor}>
+              <SelectTrigger className="h-9 text-xs">
+                <SelectValue placeholder="Filtrar por vendedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os vendedores</SelectItem>
+                {vendedores.map((vendedor) => (
+                  <SelectItem key={vendedor} value={vendedor!}>
+                    {vendedor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={filterDataInicio}
+              onChange={(e) => setFilterDataInicio(e.target.value)}
+              className="h-9 text-xs"
+              placeholder="Data Início"
+              title="Data Início"
+            />
+            <Input
+              type="date"
+              value={filterDataFim}
+              onChange={(e) => setFilterDataFim(e.target.value)}
+              className="h-9 text-xs"
+              placeholder="Data Fim"
+              title="Data Fim"
+            />
           </div>
                     
           {/* Kanban Board */}

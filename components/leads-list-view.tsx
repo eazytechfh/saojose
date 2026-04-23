@@ -75,7 +75,6 @@ function formatDateSafe(value?: string): string {
 }
 
 export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsListViewProps) {
-  const [filteredLeads, setFilteredLeads] = useState<Lead[]>(leads)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterOrigem, setFilterOrigem] = useState("")
@@ -89,33 +88,24 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
   const [processingAction, setProcessingAction] = useState(false)
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [messageText, setMessageText] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const LEADS_PER_PAGE = 100
 
   React.useEffect(() => {
-    filterLeads()
-  }, [leads, searchTerm, filterOrigem, filterEstagio])
-
-  const filterLeads = () => {
-    let filtered = [...leads]
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (lead) =>
-          lead.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          lead.telefone?.includes(searchTerm) ||
-          lead.vendedor?.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
+    const totalPages = Math.max(1, Math.ceil(leads.length / LEADS_PER_PAGE))
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
     }
+  }, [currentPage, leads])
 
-    if (filterOrigem && filterOrigem !== "all") {
-      filtered = filtered.filter((lead) => lead.origem === filterOrigem)
-    }
+  React.useEffect(() => {
+    setSelectedLeadIds((prev) => prev.filter((id) => leads.some((lead) => String(lead.id) === String(id))))
+  }, [leads])
 
-    if (filterEstagio && filterEstagio !== "all") {
-      filtered = filtered.filter((lead) => lead.estagio_lead === filterEstagio)
-    }
-
-    setFilteredLeads(filtered)
-  }
+  const totalPages = Math.max(1, Math.ceil(leads.length / LEADS_PER_PAGE))
+  const startIndex = (currentPage - 1) * LEADS_PER_PAGE
+  const endIndex = startIndex + LEADS_PER_PAGE
+  const paginatedLeads = leads.slice(startIndex, endIndex)
 
   const handleStageChange = async (leadId: LeadId, newStage: string, currentStage: string) => {
     if (newStage === currentStage) return
@@ -134,15 +124,6 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
       const success = await updateLeadStage(leadId, newStage)
 
       if (success) {
-        // Atualizar localmente para feedback imediato
-        setFilteredLeads((prevLeads) =>
-          prevLeads.map((lead) =>
-            String(lead.id) === String(leadId)
-              ? { ...lead, estagio_lead: newStage, updated_at: new Date().toISOString() }
-              : lead,
-          ),
-        )
-
         // Atualizar o lead selecionado se for o mesmo
         if (selectedLead && String(selectedLead.id) === String(leadId)) {
           setSelectedLead({ ...selectedLead, estagio_lead: newStage })
@@ -169,11 +150,6 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
   }
 
   const handleValueUpdate = (leadId: LeadId, newValue: number) => {
-    // Atualizar localmente para feedback imediato
-    setFilteredLeads((prevLeads) =>
-      prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, valor: newValue } : lead)),
-    )
-
     // Atualizar o lead selecionado se for o mesmo
     if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, valor: newValue })
@@ -184,13 +160,6 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
   }
 
   const handleObservacaoUpdate = (leadId: LeadId, newObservacao: string) => {
-    // Atualizar localmente para feedback imediato
-    setFilteredLeads((prevLeads) =>
-      prevLeads.map((lead) =>
-        String(lead.id) === String(leadId) ? { ...lead, observacao_vendedor: newObservacao } : lead,
-      ),
-    )
-
     // Atualizar o lead selecionado se for o mesmo
     if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, observacao_vendedor: newObservacao })
@@ -201,13 +170,6 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
   }
 
   const handleVeiculoUpdate = (leadId: LeadId, newVeiculo: string) => {
-    // Atualizar localmente para feedback imediato
-    setFilteredLeads((prevLeads) =>
-      prevLeads.map((lead) =>
-        String(lead.id) === String(leadId) ? { ...lead, veiculo_interesse: newVeiculo } : lead,
-      ),
-    )
-
     // Atualizar o lead selecionado se for o mesmo
     if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, veiculo_interesse: newVeiculo })
@@ -218,11 +180,6 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
   }
 
   const handleCpfUpdate = (leadId: LeadId, newCpf: string) => {
-    // Atualizar localmente para feedback imediato
-    setFilteredLeads((prevLeads) =>
-      prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, cpf: newCpf } : lead)),
-    )
-
     // Atualizar o lead selecionado se for o mesmo
     if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, cpf: newCpf })
@@ -233,12 +190,6 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
   }
 
   const handleDataNascimentoUpdate = (leadId: LeadId, newValue: string) => {
-    setFilteredLeads((prevLeads) =>
-      prevLeads.map((lead) =>
-        String(lead.id) === String(leadId) ? { ...lead, data_nascimento: newValue } : lead,
-      ),
-    )
-
     if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, data_nascimento: newValue })
     }
@@ -312,15 +263,28 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
   }
 
   const toggleSelectAll = () => {
-    if (selectedLeadIds.length === filteredLeads.length) {
-      setSelectedLeadIds([])
+    const pageLeadIds = paginatedLeads.map((lead) => lead.id)
+    const allPageSelected = pageLeadIds.every((leadId) =>
+      selectedLeadIds.some((selectedId) => String(selectedId) === String(leadId)),
+    )
+
+    if (allPageSelected) {
+      setSelectedLeadIds((prev) => prev.filter((id) => !pageLeadIds.some((leadId) => String(leadId) === String(id))))
     } else {
-      setSelectedLeadIds(filteredLeads.map((lead) => lead.id))
+      setSelectedLeadIds((prev) => {
+        const next = [...prev]
+        pageLeadIds.forEach((leadId) => {
+          if (!next.some((id) => String(id) === String(leadId))) {
+            next.push(leadId)
+          }
+        })
+        return next
+      })
     }
   }
 
   const getSelectedLeads = () => {
-    return filteredLeads.filter((lead) => selectedLeadIds.some((id) => String(id) === String(lead.id)))
+    return leads.filter((lead) => selectedLeadIds.some((id) => String(id) === String(lead.id)))
   }
 
   // Ações em massa
@@ -410,12 +374,17 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
     }
   }
 
+  const pageStart = leads.length === 0 ? 0 : startIndex + 1
+  const pageEnd = Math.min(endIndex, leads.length)
+  const allPageSelected =
+    paginatedLeads.length > 0 &&
+    paginatedLeads.every((lead) => selectedLeadIds.some((id) => String(id) === String(lead.id)))
   const origens = [...new Set(leads.map((lead) => lead.origem).filter(Boolean))]
 
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <Card>
+      <Card className="hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -543,18 +512,45 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
       <Card>
         <CardHeader>
           <CardTitle>
-            Lista de Leads ({filteredLeads.length}
+            Lista de Leads ({leads.length}
             {totalLeadsCount > 0 ? ` de ${totalLeadsCount}` : ""})
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p className="text-sm text-gray-400">
+              Exibindo {pageStart}-{pageEnd} de {leads.length} leads filtrados
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Anterior
+              </Button>
+              <span className="text-sm text-gray-300">
+                Página {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedLeadIds.length === filteredLeads.length && filteredLeads.length > 0}
+                      checked={allPageSelected}
                       onCheckedChange={toggleSelectAll}
                       aria-label="Selecionar todos"
                     />
@@ -571,7 +567,7 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLeads.map((lead) => (
+                {paginatedLeads.map((lead) => (
                   <TableRow
                     key={lead.id}
                     className={`hover:bg-gray-50 ${selectedLeadIds.some((id) => String(id) === String(lead.id)) ? "bg-purple-50" : ""}`}
@@ -659,7 +655,7 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
             </Table>
           </div>
 
-          {filteredLeads.length === 0 && (
+          {leads.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>Nenhum lead encontrado com os filtros aplicados.</p>
             </div>
