@@ -132,13 +132,27 @@ function formatDateSafe(value?: string): string {
 
   const fallbackDate = new Date(value)
   if (Number.isNaN(fallbackDate.getTime())) return "-"
-  return fallbackDate.toLocaleDateString("pt-BR")
+  return fallbackDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
 }
 
 function escapeCsvValue(value: unknown): string {
   if (value === null || value === undefined) return ""
   const normalized = String(value).replace(/"/g, '""')
   return /[",;\n]/.test(normalized) ? `"${normalized}"` : normalized
+}
+
+function getLeadDateKey(value?: string): string {
+  if (!value) return ""
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
 }
 
 export function KanbanBoard() {
@@ -236,21 +250,16 @@ export function KanbanBoard() {
     }
 
     if (filterDataInicio) {
-      const dataInicio = new Date(filterDataInicio)
       filtered = filtered.filter((lead) => {
-        if (!lead.created_at) return false
-        const leadDate = new Date(lead.created_at)
-        return leadDate >= dataInicio
+        const leadDateKey = getLeadDateKey(lead.created_at)
+        return Boolean(leadDateKey) && leadDateKey >= filterDataInicio
       })
     }
 
     if (filterDataFim) {
-      const dataFim = new Date(filterDataFim)
-      dataFim.setHours(23, 59, 59, 999) // Incluir todo o dia final
       filtered = filtered.filter((lead) => {
-        if (!lead.created_at) return false
-        const leadDate = new Date(lead.created_at)
-        return leadDate <= dataFim
+        const leadDateKey = getLeadDateKey(lead.created_at)
+        return Boolean(leadDateKey) && leadDateKey <= filterDataFim
       })
     }
 
@@ -768,6 +777,8 @@ export function KanbanBoard() {
               ))}
             </SelectContent>
           </Select>
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-gray-300">Data Início</label>
           <Input
             type="date"
             value={filterDataInicio}
@@ -776,6 +787,9 @@ export function KanbanBoard() {
             placeholder="Data Início"
             title="Data Início"
           />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] font-medium text-gray-300">Data Fim</label>
           <Input
             type="date"
             value={filterDataFim}
@@ -784,6 +798,7 @@ export function KanbanBoard() {
             placeholder="Data Fim"
             title="Data Fim"
           />
+          </div>
         </div>
       </div>
 

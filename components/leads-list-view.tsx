@@ -71,7 +71,7 @@ function formatDateSafe(value?: string): string {
 
   const fallbackDate = new Date(value)
   if (Number.isNaN(fallbackDate.getTime())) return "-"
-  return fallbackDate.toLocaleDateString("pt-BR")
+  return fallbackDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
 }
 
 export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsListViewProps) {
