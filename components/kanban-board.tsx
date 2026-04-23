@@ -147,13 +147,20 @@ function escapeCsvValue(value: unknown): string {
 function getLeadDateKey(value?: string): string {
   if (!value) return ""
 
-  const normalizedValue = value.includes(" ")
-    ? value.replace(" ", "T").replace(/(\.\d{3})\d+$/, "$1") + "Z"
-    : /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value)
-      ? value
-      : /^\d{4}-\d{2}-\d{2}T/.test(value)
-        ? `${value}Z`
-        : value
+  let normalizedValue: string
+
+  if (value.includes(" ")) {
+    // PostgreSQL format: "2026-04-22 01:30:00.123456" → truncate microseconds and treat as UTC
+    normalizedValue = value.replace(" ", "T").replace(/(\.\d{3})\d+/, "$1") + "Z"
+  } else if (/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
+    // ISO 8601 with timezone: truncate microseconds before parsing
+    normalizedValue = value.replace(/(\.\d{3})\d+/, "$1")
+  } else if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
+    // ISO 8601 without timezone: truncate microseconds and treat as UTC
+    normalizedValue = value.replace(/(\.\d{3})\d+/, "$1") + "Z"
+  } else {
+    normalizedValue = value
+  }
 
   const date = new Date(normalizedValue)
   if (Number.isNaN(date.getTime())) return ""
@@ -272,15 +279,17 @@ export function KanbanBoard() {
 
     if (filterDataInicio) {
       filtered = filtered.filter((lead) => {
-        const leadDateKey = getLeadDateKey(lead.created_at)
-        return Boolean(leadDateKey) && leadDateKey >= filterDataInicio
+        const leadDateKey = getLeadDateKey(lead.created_at) || getLeadDateKey(lead.updated_at)
+        if (!leadDateKey) return true
+        return leadDateKey >= filterDataInicio
       })
     }
 
     if (filterDataFim) {
       filtered = filtered.filter((lead) => {
-        const leadDateKey = getLeadDateKey(lead.created_at)
-        return Boolean(leadDateKey) && leadDateKey <= filterDataFim
+        const leadDateKey = getLeadDateKey(lead.created_at) || getLeadDateKey(lead.updated_at)
+        if (!leadDateKey) return true
+        return leadDateKey <= filterDataFim
       })
     }
 
