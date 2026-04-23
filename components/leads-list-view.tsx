@@ -77,6 +77,20 @@ function formatDateSafe(value?: string): string {
   return fallbackDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
 }
 
+function formatLeadTimestamp(value?: string): string {
+  if (!value) return "-"
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "-"
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
 export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsListViewProps) {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -646,7 +660,7 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{formatDateSafe(lead.created_at)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatLeadTimestamp(lead.created_at)}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" onClick={() => setSelectedLead(lead)} className="h-8 w-8 p-0">
                         <Eye className="h-4 w-4" />
@@ -736,7 +750,7 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
 
                   <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                     <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium">{formatDateSafe(selectedLead.created_at)}</span>
+                    <span className="text-sm font-medium">{formatLeadTimestamp(selectedLead.created_at)}</span>
                   </div>
                 </div>
               </div>

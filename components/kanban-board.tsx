@@ -158,6 +158,14 @@ function getLeadDateKey(value?: string): string {
   }).format(date)
 }
 
+function formatLeadTimestamp(value?: string): string {
+  const dateKey = getLeadDateKey(value)
+  if (!dateKey) return "-"
+
+  const [year, month, day] = dateKey.split("-")
+  return `${day}/${month}/${year}`
+}
+
 export function KanbanBoard() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([])
@@ -662,8 +670,8 @@ export function KanbanBoard() {
       ESTAGIO_LABELS[lead.estagio_lead as keyof typeof ESTAGIO_LABELS] || lead.estagio_lead,
       lead.valor ?? 0,
       lead.observacao_vendedor,
-      formatDateSafe(lead.created_at),
-      formatDateSafe(lead.updated_at),
+      formatLeadTimestamp(lead.created_at),
+      formatLeadTimestamp(lead.updated_at),
     ])
 
     const csv = [headers, ...rows].map((row) => row.map((value) => escapeCsvValue(value)).join(";")).join("\n")
@@ -1218,7 +1226,7 @@ export function KanbanBoard() {
 
                       <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                         <Calendar className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm font-medium">{formatDateSafe(selectedLead.created_at)}</span>
+                        <span className="text-sm font-medium">{formatLeadTimestamp(selectedLead.created_at)}</span>
                       </div>
                     </div>
                   </div>
