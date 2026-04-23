@@ -63,13 +63,16 @@ interface LeadsListViewProps {
 
 function formatDateSafe(value?: string): string {
   if (!value) return "-"
-  const normalized = normalizeDateForInput(value)
+  const trimmed = value.trim()
+  const isDateOnlyValue = /^\d{4}-\d{2}-\d{2}$/.test(trimmed) || /^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)
+  const normalized = isDateOnlyValue ? normalizeDateForInput(trimmed) : ""
+
   if (normalized) {
     const [year, month, day] = normalized.split("-")
     return `${day}/${month}/${year}`
   }
 
-  const fallbackDate = new Date(value)
+  const fallbackDate = new Date(trimmed)
   if (Number.isNaN(fallbackDate.getTime())) return "-"
   return fallbackDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
 }
