@@ -21,6 +21,7 @@ import {
   AreaChart,
 } from "recharts"
 import { getDashboardData, type DashboardFilters } from "@/lib/dashboard-stats"
+import { ESTAGIO_LABELS } from "@/lib/leads"
 import { getCurrentUser } from "@/lib/auth"
 import { TrendingUp, Users, Car, Target, Filter, RotateCcw, BarChart3, Activity } from "lucide-react"
 
@@ -288,6 +289,7 @@ export function DashboardCharts() {
                   textAnchor="end"
                   height={80}
                   tick={{ fontSize: 11, fill: "#e5e7eb" }}
+                  tickFormatter={(value) => ESTAGIO_LABELS[value as keyof typeof ESTAGIO_LABELS] || value}
                 />
                 <YAxis tick={{ fontSize: 11, fill: "#e5e7eb" }} />
                 <Tooltip
@@ -302,6 +304,7 @@ export function DashboardCharts() {
                     const labels = {
                       oportunidade: "🎯 Oportunidade",
                       em_qualificacao: "⏳ Em Qualificação",
+                      em_negociacao: "🤝 Em Negociação",
                       qualificado: "✅ Qualificado",
                       follow_up: "📝 Follow Up",
                       nutricao: "🌱 Nutrição",
@@ -344,21 +347,7 @@ export function DashboardCharts() {
                         }`}
                       ></div>
                       <span className="text-sm font-medium text-white">
-                        {item.estagio === "oportunidade"
-                          ? "Oportunidade"
-                          : item.estagio === "em_qualificacao"
-                            ? "Em Qualificação"
-                            : item.estagio === "qualificado"
-                              ? "Qualificado"
-                              : item.estagio === "follow_up"
-                                ? "Follow Up"
-                                : item.estagio === "nutricao"
-                                  ? "Nutrição"
-                                  : item.estagio === "fechado"
-                                    ? "Fechado"
-                                    : item.estagio === "nao_fechou"
-                                      ? "Não Fechou"
-                                      : item.estagio}
+                        {ESTAGIO_LABELS[item.estagio as keyof typeof ESTAGIO_LABELS] || item.estagio}
                       </span>
                     </div>
                     <div className="text-right">
