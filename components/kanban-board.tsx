@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -182,6 +182,8 @@ export function KanbanBoard() {
   const [isEditingLeadName, setIsEditingLeadName] = useState(false)
   const [leadNameInput, setLeadNameInput] = useState("")
   const [savingLeadName, setSavingLeadName] = useState(false)
+  const dataInicioInputRef = useRef<HTMLInputElement | null>(null)
+  const dataFimInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     loadLeads()
@@ -619,6 +621,18 @@ export function KanbanBoard() {
     loadLeads()
   }
 
+  const openDatePicker = (input: HTMLInputElement | null) => {
+    if (!input) return
+
+    if (typeof input.showPicker === "function") {
+      input.showPicker()
+      return
+    }
+
+    input.focus()
+    input.click()
+  }
+
   const handleExportCsv = () => {
     const headers = [
       "Nome",
@@ -782,25 +796,47 @@ export function KanbanBoard() {
           </Select>
           <div className="space-y-1">
             <label className="text-[11px] font-medium text-gray-300">Data Início</label>
-          <Input
-            type="date"
-            value={filterDataInicio}
-            onChange={(e) => setFilterDataInicio(e.target.value)}
-            className="h-9 text-xs"
-            placeholder="Data Início"
-            title="Data Início"
-          />
+            <div className="relative">
+              <Input
+                ref={dataInicioInputRef}
+                type="date"
+                value={filterDataInicio}
+                onChange={(e) => setFilterDataInicio(e.target.value)}
+                className="h-9 pr-10 text-xs"
+                placeholder="Data Início"
+                title="Data Início"
+              />
+              <button
+                type="button"
+                onClick={() => openDatePicker(dataInicioInputRef.current)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#22C55E] hover:text-white"
+                aria-label="Abrir seletor de Data Início"
+              >
+                <Calendar className="h-4 w-4" />
+              </button>
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-[11px] font-medium text-gray-300">Data Fim</label>
-          <Input
-            type="date"
-            value={filterDataFim}
-            onChange={(e) => setFilterDataFim(e.target.value)}
-            className="h-9 text-xs"
-            placeholder="Data Fim"
-            title="Data Fim"
-          />
+            <div className="relative">
+              <Input
+                ref={dataFimInputRef}
+                type="date"
+                value={filterDataFim}
+                onChange={(e) => setFilterDataFim(e.target.value)}
+                className="h-9 pr-10 text-xs"
+                placeholder="Data Fim"
+                title="Data Fim"
+              />
+              <button
+                type="button"
+                onClick={() => openDatePicker(dataFimInputRef.current)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#22C55E] hover:text-white"
+                aria-label="Abrir seletor de Data Fim"
+              >
+                <Calendar className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
