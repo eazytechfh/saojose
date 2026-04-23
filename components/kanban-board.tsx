@@ -147,30 +147,35 @@ function escapeCsvValue(value: unknown): string {
 function getLeadDateKey(value?: string): string {
   if (!value) return ""
 
-  let normalizedValue: string
-
+  // Timestamps sem fuso horário (formato PostgreSQL com espaço ou ISO sem Z/offset)
+  // são armazenados pelo N8N já no horário de Brasília — usar a data diretamente
   if (value.includes(" ")) {
-    // PostgreSQL format: "2026-04-22 01:30:00.123456" → truncate microseconds and treat as UTC
-    normalizedValue = value.replace(" ", "T").replace(/(\.\d{3})\d+/, "$1") + "Z"
-  } else if (/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
-    // ISO 8601 with timezone: truncate microseconds before parsing
-    normalizedValue = value.replace(/(\.\d{3})\d+/, "$1")
-  } else if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
-    // ISO 8601 without timezone: truncate microseconds and treat as UTC
-    normalizedValue = value.replace(/(\.\d{3})\d+/, "$1") + "Z"
-  } else {
-    normalizedValue = value
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})/)
+    return match ? match[1] : ""
   }
 
-  const date = new Date(normalizedValue)
-  if (Number.isNaN(date.getTime())) return ""
+  if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
+    if (/(?:Z|[+-]\d{2}:\d{2})$/.test(value)) {
+      // ISO 8601 com fuso explícito: converter para horário de Brasília
+      const normalizedValue = value.replace(/(\.\d{3})\d+/, "$1")
+      const date = new Date(normalizedValue)
+      if (Number.isNaN(date.getTime())) return ""
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(date)
+    } else {
+      // ISO 8601 sem fuso: usar a data como está
+      const match = value.match(/^(\d{4}-\d{2}-\d{2})/)
+      return match ? match[1] : ""
+    }
+  }
 
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date)
+  // Fallback: tentar extrair YYYY-MM-DD
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/)
+  return match ? match[1] : ""
 }
 
 function formatLeadTimestamp(value?: string): string {
