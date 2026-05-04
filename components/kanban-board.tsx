@@ -53,6 +53,8 @@ import { EditableVeiculoField } from "./editable-veiculo-field"
 import { EditableCpfField } from "./editable-cpf-field"
 import { EditableDataNascimentoField, normalizeDateForInput } from "./editable-data-nascimento-field"
 
+const KANBAN_PAGE_SIZE = 20
+
 // Nova ordem das colunas conforme solicitado
 const COLUNAS_KANBAN = [
   "oportunidade",
@@ -210,8 +212,13 @@ export function KanbanBoard() {
   const [isEditingLeadName, setIsEditingLeadName] = useState(false)
   const [leadNameInput, setLeadNameInput] = useState("")
   const [savingLeadName, setSavingLeadName] = useState(false)
+  const [stagePage, setStagePage] = useState<Record<string, number>>({})
   const dataInicioInputRef = useRef<HTMLInputElement | null>(null)
   const dataFimInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    setStagePage({})
+  }, [filteredLeads])
 
   useEffect(() => {
     loadLeads()
@@ -639,6 +646,16 @@ export function KanbanBoard() {
     return filteredLeads.filter((lead) => lead.estagio_lead === stage)
   }
 
+  const getPagedLeadsByStage = (stage: string) => {
+    const all = getLeadsByStage(stage)
+    const page = stagePage[stage] ?? 0
+    return all.slice(page * KANBAN_PAGE_SIZE, (page + 1) * KANBAN_PAGE_SIZE)
+  }
+
+  const getStagePageCount = (stage: string) => {
+    return Math.ceil(getLeadsByStage(stage).length / KANBAN_PAGE_SIZE)
+  }
+
   const getStageTotal = (stage: string) => {
     const stageLeads = getLeadsByStage(stage)
     return stageLeads.reduce((total, lead) => total + (lead.valor || 0), 0)
@@ -1010,7 +1027,7 @@ export function KanbanBoard() {
                           {...provided.droppableProps}
                           className="flex-1 space-y-2 overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#22C55E] [&::-webkit-scrollbar-track]:bg-slate-900/30"
                         >
-                          {getLeadsByStage(stage).map((lead, index) => (
+                          {getPagedLeadsByStage(stage).map((lead, index) => (
                             <Draggable key={lead.id} draggableId={lead.id.toString()} index={index}>
                               {(provided, snapshot) => (
                                 <Card
@@ -1090,6 +1107,39 @@ export function KanbanBoard() {
                             <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
                               <div className="text-xs">Nenhum lead neste estágio</div>
                               <div className="text-xs mt-1">Arraste leads aqui</div>
+                            </div>
+                          )}
+
+                          {/* Paginação por estágio */}
+                          {getStagePageCount(stage) > 1 && (
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                disabled={(stagePage[stage] ?? 0) === 0}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setStagePage((prev) => ({ ...prev, [stage]: (prev[stage] ?? 0) - 1 }))
+                                }}
+                              >
+                                ‹ Ant
+                              </Button>
+                              <span className="text-xs text-gray-500">
+                                {(stagePage[stage] ?? 0) + 1}/{getStagePageCount(stage)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                disabled={(stagePage[stage] ?? 0) >= getStagePageCount(stage) - 1}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setStagePage((prev) => ({ ...prev, [stage]: (prev[stage] ?? 0) + 1 }))
+                                }}
+                              >
+                                Prox ›
+                              </Button>
                             </div>
                           )}
                         </CardContent>
