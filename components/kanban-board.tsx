@@ -19,6 +19,8 @@ import {
   deleteLead,
   type Lead,
   type LeadId,
+  type OtherVehicleDetails,
+  type VehicleSaleStatus,
   ESTAGIO_LABELS,
   ESTAGIO_COLORS,
   VALID_ESTAGIOS,
@@ -52,6 +54,7 @@ import { EditableObservacaoField } from "./editable-observacao-field"
 import { EditableVeiculoField } from "./editable-veiculo-field"
 import { EditableCpfField } from "./editable-cpf-field"
 import { EditableDataNascimentoField, normalizeDateForInput } from "./editable-data-nascimento-field"
+import { VehicleSaleStatusField } from "./vehicle-sale-status-field"
 
 const KANBAN_PAGE_SIZE = 20
 
@@ -458,6 +461,25 @@ export function KanbanBoard() {
     // Atualizar o lead selecionado se for o mesmo
     if (selectedLead && String(selectedLead.id) === String(leadId)) {
       setSelectedLead({ ...selectedLead, cpf: newCpf })
+    }
+  }
+
+  const handleVehicleSaleUpdate = (leadId: LeadId, status: VehicleSaleStatus, details: OtherVehicleDetails) => {
+    const changes = {
+      status_venda_veiculo: status,
+      detalhes_outro_veiculo: details.reason,
+      outro_veiculo_marca: details.brand,
+      outro_veiculo_modelo: details.model,
+      outro_veiculo_ano: details.year,
+      outro_veiculo_cor: details.color,
+      outro_veiculo_valor: details.value ? Number(details.value.replace(/\./g, "").replace(",", ".")) : null,
+    }
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) => (String(lead.id) === String(leadId) ? { ...lead, ...changes } : lead)),
+    )
+
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
+      setSelectedLead({ ...selectedLead, ...changes })
     }
   }
 
@@ -1353,6 +1375,18 @@ export function KanbanBoard() {
                           />
                         </div>
                       </div>
+
+                      <VehicleSaleStatusField
+                        leadId={selectedLead.id}
+                        currentStatus={selectedLead.status_venda_veiculo}
+                        currentDetails={selectedLead.detalhes_outro_veiculo}
+                        currentBrand={selectedLead.outro_veiculo_marca}
+                        currentModel={selectedLead.outro_veiculo_modelo}
+                        currentYear={selectedLead.outro_veiculo_ano}
+                        currentColor={selectedLead.outro_veiculo_cor}
+                        currentValue={selectedLead.outro_veiculo_valor}
+                        onUpdate={(status, details) => handleVehicleSaleUpdate(selectedLead.id, status, details)}
+                      />
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div>

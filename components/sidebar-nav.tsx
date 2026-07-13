@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -19,9 +19,13 @@ const allNavigation = [
 
 export function SidebarNav() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null)
   const pathname = usePathname()
   const router = useRouter()
-  const user = getCurrentUser()
+
+  useEffect(() => {
+    setUser(getCurrentUser())
+  }, [])
 
   // Filtrar navegação baseado no cargo do usuário
   const navigation = user?.cargo === "vendedor" 

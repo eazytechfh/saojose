@@ -8,6 +8,13 @@ export interface Lead {
   email?: string
   cpf?: string
   data_nascimento?: string
+  status_venda_veiculo?: VehicleSaleStatus | null
+  detalhes_outro_veiculo?: string | null
+  outro_veiculo_marca?: string | null
+  outro_veiculo_modelo?: string | null
+  outro_veiculo_ano?: string | null
+  outro_veiculo_cor?: string | null
+  outro_veiculo_valor?: number | null
   origem?: string
   vendedor?: string
   veiculo_interesse?: string
@@ -18,6 +25,17 @@ export interface Lead {
   observacao_vendedor?: string
   created_at: string
   updated_at: string
+}
+
+export type VehicleSaleStatus = "vendido" | "nao_vendido" | "procura_outro"
+
+export interface OtherVehicleDetails {
+  reason: string
+  brand: string
+  model: string
+  year: string
+  color: string
+  value: string
 }
 
 export type LeadId = Lead["id"]
@@ -467,6 +485,49 @@ export async function updateLeadDataNascimento(leadId: LeadId, value: string): P
     return true
   } catch (error) {
     console.error("Unexpected error updating lead data_nascimento:", error)
+    return false
+  }
+}
+
+export async function updateLeadVehicleSale(
+  leadId: LeadId,
+  status: VehicleSaleStatus,
+  details: OtherVehicleDetails,
+): Promise<boolean> {
+  const supabase = createClient()
+  const leadIdForQuery = normalizeLeadIdForQuery(leadId)
+  const isLookingForAnother = status === "procura_outro"
+  const sanitizedDetails = isLookingForAnother ? details.reason.trim() : null
+  const numericValue = details.value.trim()
+    ? Number(details.value.replace(/\./g, "").replace(",", "."))
+    : null
+
+  if (status === "procura_outro" && !sanitizedDetails) return false
+  if (numericValue !== null && (!Number.isFinite(numericValue) || numericValue < 0)) return false
+
+  try {
+    const { error } = await supabase
+      .from("BASE_DE_LEADS")
+      .update({
+        status_venda_veiculo: status,
+        detalhes_outro_veiculo: sanitizedDetails,
+        outro_veiculo_marca: isLookingForAnother ? details.brand.trim() || null : null,
+        outro_veiculo_modelo: isLookingForAnother ? details.model.trim() || null : null,
+        outro_veiculo_ano: isLookingForAnother ? details.year.trim() || null : null,
+        outro_veiculo_cor: isLookingForAnother ? details.color.trim() || null : null,
+        outro_veiculo_valor: isLookingForAnother ? numericValue : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadIdForQuery)
+
+    if (error) {
+      console.error("Error updating vehicle sale status:", error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error("Unexpected error updating vehicle sale status:", error)
     return false
   }
 }

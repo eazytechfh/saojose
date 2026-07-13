@@ -13,6 +13,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   type Lead,
   type LeadId,
+  type OtherVehicleDetails,
+  type VehicleSaleStatus,
   ESTAGIO_LABELS,
   ESTAGIO_COLORS,
   updateLeadStage,
@@ -52,6 +54,7 @@ import { EditableObservacaoField } from "./editable-observacao-field"
 import { EditableVeiculoField } from "./editable-veiculo-field"
 import { EditableCpfField } from "./editable-cpf-field"
 import { EditableDataNascimentoField, normalizeDateForInput } from "./editable-data-nascimento-field"
+import { VehicleSaleStatusField } from "./vehicle-sale-status-field"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Progress } from "@/components/ui/progress"
 
@@ -211,6 +214,23 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
     }
 
     // Chamar callback para atualizar dados principais
+    onLeadsUpdate()
+  }
+
+  const handleVehicleSaleUpdate = (leadId: LeadId, status: VehicleSaleStatus, details: OtherVehicleDetails) => {
+    if (selectedLead && String(selectedLead.id) === String(leadId)) {
+      setSelectedLead({
+        ...selectedLead,
+        status_venda_veiculo: status,
+        detalhes_outro_veiculo: details.reason,
+        outro_veiculo_marca: details.brand,
+        outro_veiculo_modelo: details.model,
+        outro_veiculo_ano: details.year,
+        outro_veiculo_cor: details.color,
+        outro_veiculo_valor: details.value ? Number(details.value.replace(/\./g, "").replace(",", ".")) : null,
+      })
+    }
+
     onLeadsUpdate()
   }
 
@@ -811,6 +831,18 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
                       />
                     </div>
                   </div>
+
+                  <VehicleSaleStatusField
+                    leadId={selectedLead.id}
+                    currentStatus={selectedLead.status_venda_veiculo}
+                    currentDetails={selectedLead.detalhes_outro_veiculo}
+                    currentBrand={selectedLead.outro_veiculo_marca}
+                    currentModel={selectedLead.outro_veiculo_modelo}
+                    currentYear={selectedLead.outro_veiculo_ano}
+                    currentColor={selectedLead.outro_veiculo_cor}
+                    currentValue={selectedLead.outro_veiculo_valor}
+                    onUpdate={(status, details) => handleVehicleSaleUpdate(selectedLead.id, status, details)}
+                  />
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
