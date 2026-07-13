@@ -1378,6 +1378,7 @@ export function KanbanBoard() {
 
                       <VehicleSaleStatusField
                         leadId={selectedLead.id}
+                        editable={isEditingLeadName}
                         currentStatus={selectedLead.status_venda_veiculo}
                         currentDetails={selectedLead.detalhes_outro_veiculo}
                         currentBrand={selectedLead.outro_veiculo_marca}

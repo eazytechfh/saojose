@@ -13,6 +13,7 @@ import {
 
 interface VehicleSaleStatusFieldProps {
   leadId: LeadId
+  editable?: boolean
   currentStatus?: VehicleSaleStatus | null
   currentDetails?: string | null
   currentBrand?: string | null
@@ -31,6 +32,7 @@ const OPTIONS: Array<{ value: VehicleSaleStatus; label: string }> = [
 
 export function VehicleSaleStatusField({
   leadId,
+  editable = false,
   currentStatus,
   currentDetails,
   currentBrand,
@@ -52,7 +54,7 @@ export function VehicleSaleStatusField({
     setStatus(currentStatus || "")
     setDetails({ reason: currentDetails || "", brand: currentBrand || "", model: currentModel || "",
       year: currentYear || "", color: currentColor || "", value: currentValue == null ? "" : String(currentValue).replace(".", ",") })
-  }, [currentStatus, currentDetails, currentBrand, currentModel, currentYear, currentColor, currentValue, leadId])
+  }, [currentStatus, currentDetails, currentBrand, currentModel, currentYear, currentColor, currentValue, leadId, editable])
 
   const updateDetail = (field: keyof OtherVehicleDetails, value: string) => {
     setDetails((current) => ({ ...current, [field]: value }))
@@ -101,7 +103,7 @@ export function VehicleSaleStatusField({
               value={option.value}
               checked={status === option.value}
               onChange={() => handleStatusChange(option.value)}
-              disabled={loading}
+              disabled={loading || !editable}
               className="mt-0.5 h-4 w-4 accent-amber-600"
             />
             <span>{option.label}</span>
@@ -114,27 +116,29 @@ export function VehicleSaleStatusField({
           <div className="flex flex-col">
             <label className="mb-1 text-sm font-medium text-gray-800">Motivo</label>
             <Textarea value={details.reason} onChange={(e) => updateDetail("reason", e.target.value)}
-              placeholder="Explique por que o cliente deseja outro carro." disabled={loading} className="min-h-40 flex-1" />
+              placeholder="Explique por que o cliente deseja outro carro." disabled={loading || !editable} className="min-h-40 flex-1" />
           </div>
           <div>
             <p className="mb-2 text-sm font-medium text-gray-800">Veículo procurado</p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Input value={details.brand} onChange={(e) => updateDetail("brand", e.target.value)} placeholder="Marca" disabled={loading} />
-              <Input value={details.model} onChange={(e) => updateDetail("model", e.target.value)} placeholder="Modelo" disabled={loading} />
-              <Input value={details.year} onChange={(e) => updateDetail("year", e.target.value.replace(/[^0-9/]/g, ""))} placeholder="Ano" inputMode="numeric" disabled={loading} />
-              <Input value={details.color} onChange={(e) => updateDetail("color", e.target.value)} placeholder="Cor" disabled={loading} />
-              <Input value={details.value} onChange={(e) => updateDetail("value", e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="Valor (R$)" inputMode="decimal" disabled={loading} className="sm:col-span-2" />
+              <Input value={details.brand} onChange={(e) => updateDetail("brand", e.target.value)} placeholder="Marca" disabled={loading || !editable} />
+              <Input value={details.model} onChange={(e) => updateDetail("model", e.target.value)} placeholder="Modelo" disabled={loading || !editable} />
+              <Input value={details.year} onChange={(e) => updateDetail("year", e.target.value.replace(/[^0-9/]/g, ""))} placeholder="Ano" inputMode="numeric" disabled={loading || !editable} />
+              <Input value={details.color} onChange={(e) => updateDetail("color", e.target.value)} placeholder="Cor" disabled={loading || !editable} />
+              <Input value={details.value} onChange={(e) => updateDetail("value", e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="Valor (R$)" inputMode="decimal" disabled={loading || !editable} className="sm:col-span-2" />
             </div>
           </div>
         </div>
       )}
 
-      <div className="mt-4 flex items-center gap-3">
-        <Button type="button" size="sm" onClick={handleSave} disabled={loading || !status}>
-          {loading ? "Salvando..." : "Salvar"}
-        </Button>
-        {message && <span className={`text-xs ${message === "Informação salva." ? "text-green-700" : "text-red-600"}`}>{message}</span>}
-      </div>
+      {editable && (
+        <div className="mt-4 flex items-center gap-3">
+          <Button type="button" size="sm" onClick={handleSave} disabled={loading || !status}>
+            {loading ? "Salvando..." : "Salvar"}
+          </Button>
+          {message && <span className={`text-xs ${message === "Informação salva." ? "text-green-700" : "text-red-600"}`}>{message}</span>}
+        </div>
+      )}
     </div>
   )
 }
