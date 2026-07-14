@@ -73,7 +73,7 @@ export function EditableVeiculoField({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            className="text-xs h-7 pl-6 pr-1 border-blue-300 focus:border-blue-500"
+            className="h-7 border-blue-500/60 bg-slate-950 pl-6 pr-1 text-xs text-slate-100 placeholder:text-slate-500 focus:border-blue-500"
             placeholder="Ex: Honda Civic 2020"
             autoFocus
             disabled={loading}
@@ -93,7 +93,7 @@ export function EditableVeiculoField({
             variant="outline"
             onClick={handleCancel}
             disabled={loading}
-            className="h-7 w-7 p-0 border-gray-300 hover:bg-gray-50 bg-transparent"
+            className="h-7 w-7 border-slate-600 bg-transparent p-0 text-slate-100 hover:bg-slate-800"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -104,15 +104,15 @@ export function EditableVeiculoField({
 
   return (
     <div
-      className={`flex items-center justify-between group cursor-pointer hover:bg-blue-50 rounded p-2 transition-colors border border-blue-200 ${className}`}
+      className={`group flex cursor-pointer items-center justify-between rounded border border-blue-500/50 bg-blue-950/10 p-2 transition-colors hover:bg-blue-950/25 ${className}`}
       onClick={handleStartEdit}
     >
       <div className="flex items-center gap-2">
-        <Car className="h-4 w-4 text-blue-600" />
+        <Car className="h-4 w-4 text-blue-400" />
         <div>
-          <span className="text-sm font-medium text-blue-800">Veículo de Interesse</span>
-          <div className="text-sm text-gray-700">
-            {currentVeiculo || <span className="text-gray-400 italic">Clique para adicionar veículo</span>}
+          <span className="text-sm font-medium text-blue-300">Veículo de Interesse</span>
+          <div className="text-sm text-slate-200">
+            {currentVeiculo || <span className="italic text-slate-400">Clique para adicionar veículo</span>}
           </div>
         </div>
       </div>

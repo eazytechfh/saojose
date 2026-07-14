@@ -24,7 +24,7 @@ export default function Negociacoes() {
         {/* ============================
              TEMA GLOBAL PRETO + VERDE
            ============================ */}
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{ __html: `@media (width < 0px) {
           /* ===============================
              1. Fundo preto em TUDO
           =============================== */
@@ -196,7 +196,7 @@ export default function Negociacoes() {
             visibility: visible !important;
             opacity: 1 !important;
           }
-        ` }} />
+        }` }} />
 
         {/* ============================
              HEADER COM TÍTULO

@@ -136,7 +136,7 @@ export function EditableDataNascimentoField({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            className="h-7 pl-6 pr-1 text-xs border-blue-300 focus:border-blue-500"
+            className="h-7 border-blue-500/60 bg-slate-950 pl-6 pr-1 text-xs text-slate-100 placeholder:text-slate-500 focus:border-blue-500"
             placeholder="dd/mm/aaaa"
             inputMode="numeric"
             autoFocus
@@ -160,7 +160,7 @@ export function EditableDataNascimentoField({
             variant="outline"
             onClick={handleCancel}
             disabled={loading}
-            className="h-7 w-7 p-0 border-gray-300 bg-transparent hover:bg-gray-50"
+            className="h-7 w-7 border-slate-600 bg-transparent p-0 text-slate-100 hover:bg-slate-800"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -171,18 +171,18 @@ export function EditableDataNascimentoField({
 
   return (
     <div
-      className={`group flex cursor-pointer items-center justify-between rounded border border-blue-200 p-2 transition-colors hover:bg-blue-50 ${className}`}
+      className={`group flex cursor-pointer items-center justify-between rounded border border-blue-500/50 bg-blue-950/10 p-2 transition-colors hover:bg-blue-950/25 ${className}`}
       onClick={handleStartEdit}
     >
       <div className="flex items-center gap-2">
-        <Calendar className="h-4 w-4 text-blue-600" />
+        <Calendar className="h-4 w-4 text-blue-400" />
         <div>
-          <span className="text-sm font-medium text-blue-800">Data de Nascimento</span>
-          <div className="text-sm text-gray-700">
+          <span className="text-sm font-medium text-blue-300">Data de Nascimento</span>
+          <div className="text-sm text-slate-200">
             {normalizedCurrent ? (
               formatDateToPtBr(normalizedCurrent)
             ) : (
-              <span className="italic text-gray-400">Clique para adicionar data de nascimento</span>
+              <span className="italic text-slate-400">Clique para adicionar data de nascimento</span>
             )}
           </div>
         </div>

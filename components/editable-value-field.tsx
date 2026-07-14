@@ -89,7 +89,7 @@ export function EditableValueField({ leadId, currentValue, onValueUpdate, classN
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
             onBlur={(e) => setEditValue(formatInputValue(e.target.value))}
-            className="text-xs h-7 pl-6 pr-1 border-green-300 focus:border-green-500"
+            className="h-7 border-green-500/60 bg-slate-950 pl-6 pr-1 text-xs text-slate-100 placeholder:text-slate-500 focus:border-green-500"
             placeholder="R$ 0,00"
             autoFocus
             disabled={loading}
@@ -110,7 +110,7 @@ export function EditableValueField({ leadId, currentValue, onValueUpdate, classN
             variant="outline"
             onClick={handleCancel}
             disabled={loading}
-            className="h-7 w-7 p-0 border-gray-300 hover:bg-gray-50 bg-transparent"
+            className="h-7 w-7 border-slate-600 bg-transparent p-0 text-slate-100 hover:bg-slate-800"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -121,14 +121,14 @@ export function EditableValueField({ leadId, currentValue, onValueUpdate, classN
 
   return (
     <div
-      className={`flex items-center justify-between group cursor-pointer hover:bg-gray-50 rounded p-1 transition-colors ${className}`}
+      className={`group flex cursor-pointer items-center justify-between rounded p-1 text-green-200 transition-colors hover:bg-green-950/30 ${className}`}
       onClick={handleStartEdit}
     >
       <div className="flex items-center gap-1">
-        <DollarSign className="h-3 w-3 text-green-600" />
-        <span className="text-xs font-semibold text-green-700">{formatCurrency(currentValue)}</span>
+        <DollarSign className="h-3 w-3 text-green-400" />
+        <span className="text-xs font-semibold text-green-200">{formatCurrency(currentValue)}</span>
       </div>
-      <Edit3 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Edit3 className="h-3 w-3 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100" />
     </div>
   )
 }

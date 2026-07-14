@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client"
+import { getLeadTagsMap, type LeadTag } from "@/lib/lead-tags"
 
 export interface Lead {
   id: string | number
@@ -25,6 +26,7 @@ export interface Lead {
   observacao_vendedor?: string
   created_at: string
   updated_at: string
+  etiquetas?: LeadTag[]
 }
 
 export type VehicleSaleStatus = "vendido" | "nao_vendido" | "procura_outro"
@@ -109,7 +111,12 @@ export async function getLeads(idEmpresa: number): Promise<Lead[]> {
     return []
   }
 
-  const firstPage = ((data as Lead[]) || []).map((lead) => normalizeLeadRecord(lead))
+  const leadTagsMap = await getLeadTagsMap(idEmpresa)
+  const withTags = (lead: Lead) => ({
+    ...normalizeLeadRecord(lead),
+    etiquetas: leadTagsMap[String(lead.id)] || [],
+  })
+  const firstPage = ((data as Lead[]) || []).map(withTags)
   if (firstPage.length < PAGE_SIZE) {
     return firstPage
   }
@@ -130,7 +137,7 @@ export async function getLeads(idEmpresa: number): Promise<Lead[]> {
       break
     }
 
-    const page = ((nextData as Lead[]) || []).map((lead) => normalizeLeadRecord(lead))
+    const page = ((nextData as Lead[]) || []).map(withTags)
     allLeads.push(...page)
 
     if (page.length < PAGE_SIZE) {

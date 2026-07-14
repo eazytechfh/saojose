@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { User, Building, CreditCard, Users, Shield, Lock } from "lucide-react"
+import { User, Building, CreditCard, Users, Shield, Lock, Tags } from "lucide-react"
 import { EditProfileForm } from "@/components/edit-profile-form"
 import { AddMemberForm } from "@/components/add-member-form"
 import { MembersManagement } from "@/components/members-management"
 import { getCompanyMembers, STATUS_LABELS, CARGO_LABELS, canManageMembers } from "@/lib/auth"
+import { EtiquetasManagement } from "@/components/etiquetas-management"
 
 export default function Configuracoes() {
   const router = useRouter()
@@ -67,7 +68,7 @@ export default function Configuracoes() {
 
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/*=====================  TEMA NEON VERDE  =====================*/}
-        <style>{`
+        <style>{`@media (width < 0px) {
           /* Fundo geral preto */
           body, main, div, section, .container, .flex-1 {
             background-color: #000 !important;
@@ -154,7 +155,7 @@ export default function Configuracoes() {
             color: #000 !important;
             stroke: #000 !important;
           }
-        `}</style>
+        }`}</style>
 
         {/*=====================  CONTEÚDO  =====================*/}
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black">
@@ -166,7 +167,7 @@ export default function Configuracoes() {
 
             <div className="grid gap-6 md:grid-cols-2">
               {/*----------------------  CARD: PESSOAIS  ----------------------*/}
-              <Card>
+              <Card className="border-slate-800 bg-slate-950 text-slate-50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
@@ -217,7 +218,7 @@ export default function Configuracoes() {
               </Card>
 
               {/*----------------------  CARD: EMPRESA  ----------------------*/}
-              <Card>
+              <Card className="border-slate-800 bg-slate-950 text-slate-50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building className="h-5 w-5" />
@@ -244,7 +245,7 @@ export default function Configuracoes() {
               </Card>
 
               {/*----------------------  CARD: PLANO  ----------------------*/}
-              <Card>
+              <Card className="border-slate-800 bg-slate-950 text-slate-50">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
@@ -271,8 +272,22 @@ export default function Configuracoes() {
                 </CardContent>
               </Card>
 
+              {/*----------------------  CARD: ETIQUETAS  ----------------------*/}
+              <Card className="border-slate-800 bg-slate-950 text-slate-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Tags className="h-5 w-5" />
+                    Etiquetas
+                    {!isUserAdmin && <Lock className="h-4 w-4 text-gray-400" />}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EtiquetasManagement idEmpresa={user.id_empresa} canManage={isUserAdmin} />
+                </CardContent>
+              </Card>
+
               {/*----------------------  CARD: GERENCIAR MEMBROS  ----------------------*/}
-              <Card className="md:col-span-2">
+              <Card className="border-slate-800 bg-slate-950 text-slate-50 md:col-span-2">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
@@ -292,19 +307,19 @@ export default function Configuracoes() {
                 <CardContent className="space-y-4">
                   {/* Caixas de métrica */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="members-box p-3 rounded-lg">
+                    <div className="rounded-lg border border-green-500/60 bg-black p-3">
                       <p className="text-sm font-medium">Total de Membros</p>
-                      <p className="text-2xl font-bold value-green">{companyMembers.length}</p>
+                      <p className="text-2xl font-bold text-green-500">{companyMembers.length}</p>
                     </div>
 
-                    <div className="members-box p-3 rounded-lg">
+                    <div className="rounded-lg border border-green-500/60 bg-black p-3">
                       <p className="text-sm font-medium">Membros Ativos</p>
-                      <p className="text-2xl font-bold value-green">{activeMembers.length}</p>
+                      <p className="text-2xl font-bold text-green-500">{activeMembers.length}</p>
                     </div>
 
-                    <div className="members-box p-3 rounded-lg">
+                    <div className="rounded-lg border border-green-500/60 bg-black p-3">
                       <p className="text-sm font-medium">Administradores</p>
-                      <p className="text-2xl font-bold value-green">{adminMembers.length}</p>
+                      <p className="text-2xl font-bold text-green-500">{adminMembers.length}</p>
                     </div>
                   </div>
 

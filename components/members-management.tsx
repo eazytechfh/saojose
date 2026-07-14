@@ -18,9 +18,7 @@ import {
 import {
   type User,
   STATUS_LABELS,
-  STATUS_COLORS,
   CARGO_LABELS,
-  CARGO_COLORS,
   updateMemberStatus,
   updateMemberCargo,
   deleteMember,
@@ -177,7 +175,7 @@ export function MembersManagement({ members, currentUser, onMembersUpdate }: Mem
 
       <div className="space-y-3 max-h-60 overflow-y-auto">
         {members.map((member) => (
-          <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div key={member.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-black p-3 text-slate-100">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-sm font-medium truncate">{member.nome_usuario}</p>
@@ -187,9 +185,9 @@ export function MembersManagement({ members, currentUser, onMembersUpdate }: Mem
                   </Badge>
                 )}
               </div>
-              <p className="text-xs text-gray-500 truncate">{member.email}</p>
-              {member.telefone && <p className="text-xs text-gray-500">{member.telefone}</p>}
-              <p className="text-xs text-gray-400">
+              <p className="truncate text-xs text-slate-400">{member.email}</p>
+              {member.telefone && <p className="text-xs text-slate-400">{member.telefone}</p>}
+              <p className="text-xs text-slate-500">
                 Criado em: {new Date(member.created_at).toLocaleDateString("pt-BR")}
               </p>
             </div>
@@ -203,12 +201,10 @@ export function MembersManagement({ members, currentUser, onMembersUpdate }: Mem
                 }
                 disabled={loading === member.id || !canManage || member.id === currentUser.id}
               >
-                <SelectTrigger className="w-auto min-w-[120px] bg-transparent border-none hover:bg-transparent">
+                <SelectTrigger className="w-auto min-w-[140px] border-green-500/60 bg-slate-950 text-white hover:bg-slate-900">
                   <div className="flex items-center gap-1">
                     {getCargoIcon(member.cargo)}
-                    <Badge className={`text-xs ${CARGO_COLORS[member.cargo as keyof typeof CARGO_COLORS]}`}>
-                      {CARGO_LABELS[member.cargo as keyof typeof CARGO_LABELS]}
-                    </Badge>
+                    <span className="text-xs font-medium text-white">{CARGO_LABELS[member.cargo as keyof typeof CARGO_LABELS]}</span>
                   </div>
                 </SelectTrigger>
                 <SelectContent className="bg-black border-[#22C55E] text-white">
@@ -230,12 +226,10 @@ export function MembersManagement({ members, currentUser, onMembersUpdate }: Mem
                   onValueChange={(value) => handleStatusChange(member.id, value as "ativo" | "pendente" | "inativo")}
                   disabled={loading === member.id || !canManage}
                 >
-                  <SelectTrigger className="w-auto min-w-[100px] bg-transparent border-none hover:bg-transparent">
+                  <SelectTrigger className="w-auto min-w-[120px] border-green-500/60 bg-slate-950 text-white hover:bg-slate-900">
                     <div className="flex items-center gap-1">
                       {getStatusIcon(member.status)}
-                      <Badge className={`text-xs ${STATUS_COLORS[member.status as keyof typeof STATUS_COLORS]}`}>
-                        {STATUS_LABELS[member.status as keyof typeof STATUS_LABELS]}
-                      </Badge>
+                      <span className="text-xs font-medium text-white">{STATUS_LABELS[member.status as keyof typeof STATUS_LABELS]}</span>
                     </div>
                   </SelectTrigger>
                   <SelectContent className="bg-black border-[#22C55E] text-white">

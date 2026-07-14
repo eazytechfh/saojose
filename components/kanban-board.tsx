@@ -55,6 +55,8 @@ import { EditableVeiculoField } from "./editable-veiculo-field"
 import { EditableCpfField } from "./editable-cpf-field"
 import { EditableDataNascimentoField, normalizeDateForInput } from "./editable-data-nascimento-field"
 import { VehicleSaleStatusField } from "./vehicle-sale-status-field"
+import { LeadTagsManager } from "./lead-tags-manager"
+import { getLeadTagDisplayStyle, type LeadTag } from "@/lib/lead-tags"
 
 const KANBAN_PAGE_SIZE = 20
 
@@ -690,6 +692,11 @@ export function KanbanBoard() {
     loadLeads()
   }
 
+  const handleTagsUpdate = (leadId: LeadId, tags: LeadTag[]) => {
+    setLeads((current) => current.map((lead) => String(lead.id) === String(leadId) ? { ...lead, etiquetas: tags } : lead))
+    setSelectedLead((current) => current && String(current.id) === String(leadId) ? { ...current, etiquetas: tags } : current)
+  }
+
   const openDatePicker = (input: HTMLInputElement | null) => {
     if (!input) return
 
@@ -1017,16 +1024,16 @@ export function KanbanBoard() {
                   <Droppable key={stage} droppableId={stage}>
                     {(provided, snapshot) => (
                       <Card
-                        className={`w-80 min-h-[300px] flex-shrink-0 flex h-[68vh] flex-col transition-all duration-200 ${
+                        className={`flex h-[68vh] min-h-[300px] w-80 flex-shrink-0 flex-col border-slate-800 bg-slate-950 text-slate-50 transition-colors duration-150 ${
                           snapshot.isDraggingOver
-                            ? "bg-gradient-to-b from-blue-50 to-blue-100 border-blue-300 shadow-lg transform scale-105"
-                            : "hover:shadow-md"
+                            ? "border-green-500 bg-green-950/40 shadow-lg shadow-green-950/30"
+                            : "hover:border-slate-700"
                         }`}
                       >
                         <CardHeader className="pb-3">
                           <CardTitle className="text-sm font-medium flex items-center justify-between">
                             <span className="flex items-center gap-2">
-                              {snapshot.isDraggingOver && <Move className="h-4 w-4 text-blue-500 animate-pulse" />}
+                              {snapshot.isDraggingOver && <Move className="h-4 w-4 animate-pulse text-green-500" />}
                               {ESTAGIO_LABELS[stage as keyof typeof ESTAGIO_LABELS]}
                             </span>
                             <div className="flex flex-col items-end gap-1">
@@ -1039,7 +1046,7 @@ export function KanbanBoard() {
                             </div>
                           </CardTitle>
                           {snapshot.isDraggingOver && (
-                            <div className="text-xs text-blue-600 font-medium animate-pulse">
+                            <div className="text-xs font-medium text-green-400">
                               ↓ Solte aqui para mover
                             </div>
                           )}
@@ -1056,10 +1063,10 @@ export function KanbanBoard() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`cursor-grab active:cursor-grabbing transition-all duration-200 ${
+                                  className={`cursor-grab border-slate-800 bg-black text-slate-100 transition-colors duration-150 active:cursor-grabbing ${
                                     snapshot.isDragging
-                                      ? "shadow-2xl rotate-3 scale-105 bg-white border-blue-300 z-50"
-                                      : "hover:shadow-md hover:-translate-y-1"
+                                      ? "z-50 border-green-500 shadow-2xl shadow-green-950/40"
+                                      : "hover:border-green-500/60 hover:bg-slate-950"
                                   } ${String(movingLead) === String(lead.id) ? "opacity-50" : ""}`}
                                   onClick={(e) => {
                                     // Só abre o modal se não estiver arrastando
@@ -1071,7 +1078,7 @@ export function KanbanBoard() {
                                   <CardContent className="p-3">
                                     <div className="space-y-2">
                                       <div className="flex items-center justify-between text-foreground">
-                                        <h4 className="font-medium text-sm text-gray-900 truncate flex-1">
+                                        <h4 className="flex-1 truncate text-sm font-medium text-white">
                                           {lead.nome}
                                         </h4>
                                         <div className="flex items-center gap-1">
@@ -1084,7 +1091,7 @@ export function KanbanBoard() {
 
                                       {/* Campo de Valor Editável */}
                                       <div
-                                        className="border border-gray-200 rounded p-1"
+                                        className="rounded border border-slate-700 bg-black p-1"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         <EditableValueField
@@ -1095,13 +1102,13 @@ export function KanbanBoard() {
                                       </div>
 
                                       {lead.telefone && (
-                                        <p className="text-xs text-gray-600 flex items-center gap-1">
+                                        <p className="flex items-center gap-1 text-xs text-slate-300">
                                           <Phone className="h-3 w-3" />
                                           {lead.telefone}
                                         </p>
                                       )}
                                       {lead.veiculo_interesse && (
-                                        <p className="text-xs text-gray-600 flex items-center gap-1 truncate">
+                                        <p className="flex items-center gap-1 truncate text-xs text-slate-300">
                                           <Car className="h-3 w-3 flex-shrink-0" />
                                           <span className="truncate">{lead.veiculo_interesse}</span>
                                         </p>
@@ -1113,9 +1120,15 @@ export function KanbanBoard() {
                                           </Badge>
                                         )}
                                         {lead.vendedor && (
-                                          <span className="text-xs text-gray-500 truncate ml-2">{lead.vendedor}</span>
+                                          <span className="ml-2 truncate text-xs text-slate-400">{lead.vendedor}</span>
                                         )}
                                       </div>
+                                      {!!lead.etiquetas?.length && (
+                                        <div className="flex flex-wrap gap-1">
+                                          {lead.etiquetas.slice(0, 2).map((tag) => <Badge key={tag.id} className="text-[10px]" style={getLeadTagDisplayStyle(tag.cor)}>{tag.nome}</Badge>)}
+                                          {lead.etiquetas.length > 2 && <Badge variant="outline" className="text-[10px]">+{lead.etiquetas.length - 2}</Badge>}
+                                        </div>
+                                      )}
                                     </div>
                                   </CardContent>
                                 </Card>
@@ -1275,22 +1288,22 @@ export function KanbanBoard() {
                     {/* Informações Básicas em Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {selectedLead.telefone && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <Phone className="h-4 w-4 text-gray-500" />
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                          <Phone className="h-4 w-4 text-slate-400" />
                           <span className="text-sm font-medium">{selectedLead.telefone}</span>
                         </div>
                       )}
 
                       {selectedLead.cpf && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <FileText className="h-4 w-4 text-gray-500" />
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                          <FileText className="h-4 w-4 text-slate-400" />
                           <span className="text-sm font-medium truncate">{selectedLead.cpf}</span>
                         </div>
                       )}
 
                       {normalizeDateForInput(selectedLead.data_nascimento) && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <Calendar className="h-4 w-4 text-gray-500" />
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                          <Calendar className="h-4 w-4 text-slate-400" />
                           <span className="text-sm font-medium">
                             {formatDateSafe(selectedLead.data_nascimento)}
                           </span>
@@ -1298,28 +1311,28 @@ export function KanbanBoard() {
                       )}
 
                       {selectedLead.origem && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <MapPin className="h-4 w-4 text-gray-500" />
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                          <MapPin className="h-4 w-4 text-slate-400" />
                           <span className="text-sm font-medium">{selectedLead.origem}</span>
                         </div>
                       )}
 
                       {selectedLead.vendedor && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <User className="h-4 w-4 text-gray-500" />
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                          <User className="h-4 w-4 text-slate-400" />
                           <span className="text-sm font-medium">{selectedLead.vendedor}</span>
                         </div>
                       )}
 
                       {selectedLead.veiculo_interesse && (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                          <Car className="h-4 w-4 text-gray-500" />
+                        <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                          <Car className="h-4 w-4 text-slate-400" />
                           <span className="text-sm font-medium">{selectedLead.veiculo_interesse}</span>
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                        <Calendar className="h-4 w-4 text-gray-500" />
+                      <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                        <Calendar className="h-4 w-4 text-slate-400" />
                         <span className="text-sm font-medium">{formatLeadTimestamp(selectedLead.created_at)}</span>
                       </div>
                     </div>
@@ -1328,13 +1341,14 @@ export function KanbanBoard() {
                   {/* Scrollable Content */}
                   <ScrollArea className="flex-1 mt-4">
                     <div className="space-y-6 pr-4">
+                      <LeadTagsManager leadId={selectedLead.id} empresaId={selectedLead.id_empresa} selectedTags={selectedLead.etiquetas || []} onTagsChange={(tags) => handleTagsUpdate(selectedLead.id, tags)} />
                       {/* Campos Editáveis */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Valor do Lead - Editável */}
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="rounded-lg border border-green-500/40 bg-green-950/20 p-4">
                           <div className="flex items-center gap-2 mb-3">
-                            <DollarSign className="h-5 w-5 text-green-600" />
-                            <span className="text-lg font-semibold text-green-800">Valor do Negócio</span>
+                            <DollarSign className="h-5 w-5 text-green-400" />
+                            <span className="text-lg font-semibold text-green-200">Valor do Negócio</span>
                           </div>
                           <EditableValueField
                             leadId={selectedLead.id}
@@ -1408,8 +1422,8 @@ export function KanbanBoard() {
                             <FileText className="h-5 w-5 text-blue-500" />
                             Resumo de Qualificação
                           </h4>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <div className="text-sm text-gray-800 whitespace-pre-line leading-relaxed font-medium">
+                          <div className="rounded-lg border border-blue-500/40 bg-blue-950/20 p-4">
+                            <div className="text-sm font-medium leading-relaxed whitespace-pre-line text-slate-100">
                               {selectedLead.resumo_qualificacao}
                             </div>
                           </div>
@@ -1443,10 +1457,10 @@ export function KanbanBoard() {
                           </Button>
                         </div>
 
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                          <div className="text-sm text-gray-800 whitespace-pre-line leading-relaxed font-medium">
+                        <div className="rounded-lg border border-green-500/40 bg-green-950/20 p-4">
+                          <div className="text-sm font-medium leading-relaxed whitespace-pre-line text-slate-100">
                             {selectedLead.resumo_comercial || (
-                              <span className="text-gray-500 italic">
+                              <span className="italic text-slate-400">
                                 Nenhum resumo comercial disponível. Clique em "Gerar Resumo Comercial" para criar um.
                               </span>
                             )}

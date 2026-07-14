@@ -29,7 +29,7 @@ export default function Agendamentos() {
         {/* ========================
             ESTILO GLOBAL NEON DARK
         ========================= */}
-        <style>{`
+        <style>{`@media (width < 0px) {
           /* Fundo preto geral */
           body, main, div, section, .container, .flex-1 {
             background-color: #000 !important;
@@ -93,7 +93,7 @@ export default function Agendamentos() {
             color: #000 !important;
             stroke: #000 !important;
           }
-        `}</style>
+        }`}</style>
 
         {/* ========================
             CONTEÚDO

@@ -73,7 +73,7 @@ export function EditableObservacaoField({
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyPress}
-          className="min-h-[120px] border-orange-300 focus:border-orange-500 resize-none"
+          className="min-h-[120px] resize-none border-orange-500/60 bg-slate-950 text-slate-100 placeholder:text-slate-500 focus:border-orange-500"
           placeholder="Digite suas observações sobre este lead..."
           autoFocus
           disabled={loading}
@@ -93,31 +93,31 @@ export function EditableObservacaoField({
             variant="outline"
             onClick={handleCancel}
             disabled={loading}
-            className="border-gray-300 hover:bg-gray-50 bg-transparent"
+            className="border-slate-600 bg-transparent text-slate-100 hover:bg-slate-800"
           >
             <X className="h-3 w-3 mr-1" />
             Cancelar
           </Button>
         </div>
-        <p className="text-xs text-gray-500">💡 Dica: Use Ctrl+Enter para salvar rapidamente</p>
+        <p className="text-xs text-slate-400">💡 Dica: Use Ctrl+Enter para salvar rapidamente</p>
       </div>
     )
   }
 
   return (
     <div
-      className={`group cursor-pointer hover:bg-orange-50 rounded-lg p-3 border border-orange-200 transition-colors ${className}`}
+      className={`group cursor-pointer rounded-lg border border-orange-500/50 bg-orange-950/10 p-3 transition-colors hover:bg-orange-950/25 ${className}`}
       onClick={handleStartEdit}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="h-4 w-4 text-orange-600" />
-            <span className="text-sm font-medium text-orange-800">Observação do Vendedor</span>
+            <MessageSquare className="h-4 w-4 text-orange-400" />
+            <span className="text-sm font-medium text-orange-300">Observação do Vendedor</span>
           </div>
-          <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed min-h-[60px]">
+          <div className="min-h-[60px] whitespace-pre-line text-sm leading-relaxed text-slate-200">
             {currentObservacao || (
-              <span className="text-gray-400 italic">Clique para adicionar observações sobre este lead...</span>
+              <span className="italic text-slate-400">Clique para adicionar observações sobre este lead...</span>
             )}
           </div>
         </div>

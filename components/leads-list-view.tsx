@@ -57,6 +57,8 @@ import { EditableDataNascimentoField, normalizeDateForInput } from "./editable-d
 import { VehicleSaleStatusField } from "./vehicle-sale-status-field"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Progress } from "@/components/ui/progress"
+import { LeadTagsManager } from "./lead-tags-manager"
+import { getLeadTagDisplayStyle, type LeadTag } from "@/lib/lead-tags"
 
 interface LeadsListViewProps {
   leads: Lead[]
@@ -214,6 +216,11 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
     }
 
     // Chamar callback para atualizar dados principais
+    onLeadsUpdate()
+  }
+
+  const handleTagsUpdate = (leadId: LeadId, tags: LeadTag[]) => {
+    setSelectedLead((current) => current && String(current.id) === String(leadId) ? { ...current, etiquetas: tags } : current)
     onLeadsUpdate()
   }
 
@@ -539,12 +546,12 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
       )}
 
       {/* Instruções */}
-      <Card className="bg-white border-green-500">
+      <Card className="border-green-500 bg-slate-950 text-slate-100">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <RefreshCw className="h-5 w-5 text-green-600" />
             <div>
-              <p className="text-sm font-medium text-black">
+              <p className="text-sm font-medium text-slate-100">
                 💡 <strong>Como usar:</strong> Clique no dropdown de estágio para alterar o status do lead
               </p>
               <p className="text-xs text-gray-700 mt-1">As alterações são salvas automaticamente no banco de dados</p>
@@ -627,6 +634,7 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
                     <TableCell className="font-medium">
                       <div>
                         <div className="font-semibold">{lead.nome}</div>
+                        {!!lead.etiquetas?.length && <div className="mt-1 flex flex-wrap gap-1">{lead.etiquetas.slice(0, 2).map((tag) => <Badge key={tag.id} className="text-[10px]" style={getLeadTagDisplayStyle(tag.cor)}>{tag.nome}</Badge>)}{lead.etiquetas.length > 2 && <Badge variant="outline" className="text-[10px]">+{lead.etiquetas.length - 2}</Badge>}</div>}
                         <div className="text-sm text-gray-500 md:hidden">
                           {lead.telefone && (
                             <span className="flex items-center gap-1 mt-1">
@@ -735,49 +743,49 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
                 {/* Informações Básicas em Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {selectedLead.telefone && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <Phone className="h-4 w-4 text-gray-500" />
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                      <Phone className="h-4 w-4 text-slate-400" />
                       <span className="text-sm font-medium">{selectedLead.telefone}</span>
                     </div>
                   )}
 
                   {selectedLead.cpf && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <FileText className="h-4 w-4 text-gray-500" />
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                      <FileText className="h-4 w-4 text-slate-400" />
                       <span className="text-sm font-medium truncate">{selectedLead.cpf}</span>
                     </div>
                   )}
 
                   {normalizeDateForInput(selectedLead.data_nascimento) && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <Calendar className="h-4 w-4 text-gray-500" />
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                      <Calendar className="h-4 w-4 text-slate-400" />
                       <span className="text-sm font-medium">{formatDateSafe(selectedLead.data_nascimento)}</span>
                     </div>
                   )}
 
                   {selectedLead.origem && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-gray-500" />
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                      <MapPin className="h-4 w-4 text-slate-400" />
                       <span className="text-sm font-medium">{selectedLead.origem}</span>
                     </div>
                   )}
 
                   {selectedLead.vendedor && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <User className="h-4 w-4 text-gray-500" />
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                      <User className="h-4 w-4 text-slate-400" />
                       <span className="text-sm font-medium">{selectedLead.vendedor}</span>
                     </div>
                   )}
 
                   {selectedLead.veiculo_interesse && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <Car className="h-4 w-4 text-gray-500" />
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                      <Car className="h-4 w-4 text-slate-400" />
                       <span className="text-sm font-medium">{selectedLead.veiculo_interesse}</span>
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                    <Calendar className="h-4 w-4 text-gray-500" />
+                  <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950 p-2 text-slate-100">
+                    <Calendar className="h-4 w-4 text-slate-400" />
                     <span className="text-sm font-medium">{formatLeadTimestamp(selectedLead.created_at)}</span>
                   </div>
                 </div>
@@ -786,13 +794,14 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
               {/* Scrollable Content */}
               <ScrollArea className="flex-1 mt-4">
                 <div className="space-y-6 pr-4">
+                  <LeadTagsManager leadId={selectedLead.id} empresaId={selectedLead.id_empresa} selectedTags={selectedLead.etiquetas || []} onTagsChange={(tags) => handleTagsUpdate(selectedLead.id, tags)} />
                   {/* Campos Editáveis */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Valor do Lead - Editável */}
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="rounded-lg border border-green-500/40 bg-green-950/20 p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <DollarSign className="h-5 w-5 text-green-600" />
-                        <span className="text-lg font-semibold text-green-800">Valor do Negócio</span>
+                        <DollarSign className="h-5 w-5 text-green-400" />
+                        <span className="text-lg font-semibold text-green-200">Valor do Negócio</span>
                       </div>
                       <EditableValueField
                         leadId={selectedLead.id}
@@ -861,8 +870,8 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
                         <FileText className="h-5 w-5 text-blue-500" />
                         Resumo de Qualificação
                       </h4>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="text-sm text-gray-800 whitespace-pre-line leading-relaxed font-medium">
+                      <div className="rounded-lg border border-blue-500/40 bg-blue-950/20 p-4">
+                        <div className="text-sm font-medium leading-relaxed whitespace-pre-line text-slate-100">
                           {selectedLead.resumo_qualificacao}
                         </div>
                       </div>
@@ -896,10 +905,10 @@ export function LeadsListView({ leads, onLeadsUpdate, totalLeadsCount }: LeadsLi
                       </Button>
                     </div>
 
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="text-sm text-gray-800 whitespace-pre-line leading-relaxed font-medium">
+                    <div className="rounded-lg border border-green-500/40 bg-green-950/20 p-4">
+                      <div className="text-sm font-medium leading-relaxed whitespace-pre-line text-slate-100">
                         {selectedLead.resumo_comercial || (
-                          <span className="text-gray-500 italic">
+                          <span className="italic text-slate-400">
                             Nenhum resumo comercial disponível. Clique em "Gerar Resumo Comercial" para criar um.
                           </span>
                         )}

@@ -92,11 +92,11 @@ export function VehicleSaleStatusField({
   }
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-      <p className="mb-3 text-sm font-semibold text-amber-900">O carro foi vendido?</p>
+    <div className="rounded-lg border border-amber-500/60 bg-amber-950/20 p-4">
+      <p className="mb-3 text-sm font-semibold text-amber-300">O carro foi vendido?</p>
       <div className="space-y-2">
         {OPTIONS.map((option) => (
-          <label key={option.value} className="flex cursor-pointer items-start gap-2 text-sm text-gray-800">
+          <label key={option.value} className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
             <input
               type="radio"
               name={`status-venda-${leadId}`}
@@ -114,18 +114,18 @@ export function VehicleSaleStatusField({
       {status === "procura_outro" && (
         <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div className="flex flex-col">
-            <label className="mb-1 text-sm font-medium text-gray-800">Motivo</label>
+            <label className="mb-1 text-sm font-medium text-slate-200">Motivo</label>
             <Textarea value={details.reason} onChange={(e) => updateDetail("reason", e.target.value)}
-              placeholder="Explique por que o cliente deseja outro carro." disabled={loading || !editable} className="min-h-40 flex-1" />
+              placeholder="Explique por que o cliente deseja outro carro." disabled={loading || !editable} className="min-h-40 flex-1 border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500" />
           </div>
           <div>
-            <p className="mb-2 text-sm font-medium text-gray-800">Veículo procurado</p>
+            <p className="mb-2 text-sm font-medium text-slate-200">Veículo procurado</p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Input value={details.brand} onChange={(e) => updateDetail("brand", e.target.value)} placeholder="Marca" disabled={loading || !editable} />
-              <Input value={details.model} onChange={(e) => updateDetail("model", e.target.value)} placeholder="Modelo" disabled={loading || !editable} />
-              <Input value={details.year} onChange={(e) => updateDetail("year", e.target.value.replace(/[^0-9/]/g, ""))} placeholder="Ano" inputMode="numeric" disabled={loading || !editable} />
-              <Input value={details.color} onChange={(e) => updateDetail("color", e.target.value)} placeholder="Cor" disabled={loading || !editable} />
-              <Input value={details.value} onChange={(e) => updateDetail("value", e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="Valor (R$)" inputMode="decimal" disabled={loading || !editable} className="sm:col-span-2" />
+              <Input value={details.brand} onChange={(e) => updateDetail("brand", e.target.value)} placeholder="Marca" disabled={loading || !editable} className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500" />
+              <Input value={details.model} onChange={(e) => updateDetail("model", e.target.value)} placeholder="Modelo" disabled={loading || !editable} className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500" />
+              <Input value={details.year} onChange={(e) => updateDetail("year", e.target.value.replace(/[^0-9/]/g, ""))} placeholder="Ano" inputMode="numeric" disabled={loading || !editable} className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500" />
+              <Input value={details.color} onChange={(e) => updateDetail("color", e.target.value)} placeholder="Cor" disabled={loading || !editable} className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500" />
+              <Input value={details.value} onChange={(e) => updateDetail("value", e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="Valor (R$)" inputMode="decimal" disabled={loading || !editable} className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500 sm:col-span-2" />
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@ export function VehicleSaleStatusField({
           <Button type="button" size="sm" onClick={handleSave} disabled={loading || !status}>
             {loading ? "Salvando..." : "Salvar"}
           </Button>
-          {message && <span className={`text-xs ${message === "Informação salva." ? "text-green-700" : "text-red-600"}`}>{message}</span>}
+          {message && <span className={`text-xs ${message === "Informação salva." ? "text-green-300" : "text-red-300"}`}>{message}</span>}
         </div>
       )}
     </div>

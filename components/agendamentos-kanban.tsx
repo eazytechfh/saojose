@@ -298,16 +298,16 @@ export function AgendamentosKanban() {
               <Droppable key={stage} droppableId={stage}>
                 {(provided, snapshot) => (
                   <Card
-                    className={`w-80 min-h-[500px] flex-shrink-0 transition-all duration-200 ${
+                    className={`min-h-[500px] w-80 flex-shrink-0 border-slate-800 bg-slate-950 text-slate-50 transition-colors duration-150 ${
                       snapshot.isDraggingOver
-                        ? "bg-gradient-to-b from-blue-50 to-blue-100 border-blue-300 shadow-lg"
-                        : "hover:shadow-md"
+                        ? "border-green-500 bg-green-950/40 shadow-lg shadow-green-950/30"
+                        : "hover:border-slate-700"
                     }`}
                   >
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm font-medium flex items-center justify-between">
                         <span className="flex items-center gap-2">
-                          {snapshot.isDraggingOver && <Move className="h-4 w-4 text-blue-500 animate-pulse" />}
+                          {snapshot.isDraggingOver && <Move className="h-4 w-4 animate-pulse text-green-500" />}
                           {ESTAGIO_AGENDAMENTO_LABELS[stage as keyof typeof ESTAGIO_AGENDAMENTO_LABELS]}
                         </span>
                         <Badge variant="secondary" className="text-xs">
@@ -323,18 +323,18 @@ export function AgendamentosKanban() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`cursor-grab active:cursor-grabbing transition-all duration-200 ${
+                              className={`cursor-grab border-slate-800 bg-black text-slate-100 transition-colors duration-150 active:cursor-grabbing ${
                                 snapshot.isDragging
-                                  ? "shadow-2xl rotate-3 scale-105 bg-white border-blue-300 z-50"
-                                  : "hover:shadow-md hover:-translate-y-1"
+                                  ? "z-50 border-green-500 shadow-2xl shadow-green-950/40"
+                                  : "hover:border-green-500/60 hover:bg-slate-950"
                               } ${movingAgendamento === agendamento.id ? "opacity-50" : ""}`}
                               onClick={() => handleOpenAgendamento(agendamento)}
                             >
                               <CardContent className="p-3 space-y-2">
-                                <div className="text-sm font-semibold text-gray-900 truncate">
+                                <div className="truncate text-sm font-semibold text-white">
                                   {agendamento.titulo || agendamento.nome_lead || "Sem título"}
                                 </div>
-                                <div className="space-y-1 text-xs text-gray-600">
+                                <div className="space-y-1 text-xs text-slate-300">
                                   {agendamento.telefone && (
                                     <div className="flex items-center gap-1">
                                       <Phone className="h-3 w-3" />

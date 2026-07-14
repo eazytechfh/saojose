@@ -26,7 +26,7 @@ export default function Estoque() {
         {/* ============================
             GLOBAL DARK + NEON
         ============================ */}
-        <style>{`
+        <style>{`@media (width < 0px) {
           /* Fundo geral */
           body, main, div, section, .container, .flex-1 {
             background-color: #000 !important;
@@ -72,7 +72,7 @@ export default function Estoque() {
             color: #000 !important;
             stroke: #000 !important;
           }
-        `}</style>
+        }`}</style>
 
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-black">
           <div className="container mx-auto px-6 py-8">

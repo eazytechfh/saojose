@@ -67,7 +67,7 @@ export function EditableCpfField({ leadId, currentCpf, onCpfUpdate, className = 
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            className="h-7 pl-6 pr-1 text-xs border-green-300 focus:border-green-500"
+            className="h-7 border-green-500/60 bg-slate-950 pl-6 pr-1 text-xs text-slate-100 placeholder:text-slate-500 focus:border-green-500"
             placeholder="000.000.000-00"
             autoFocus
             disabled={loading}
@@ -82,7 +82,7 @@ export function EditableCpfField({ leadId, currentCpf, onCpfUpdate, className = 
             variant="outline"
             onClick={handleCancel}
             disabled={loading}
-            className="h-7 w-7 p-0 border-gray-300 bg-transparent hover:bg-gray-50"
+            className="h-7 w-7 border-slate-600 bg-transparent p-0 text-slate-100 hover:bg-slate-800"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -93,15 +93,15 @@ export function EditableCpfField({ leadId, currentCpf, onCpfUpdate, className = 
 
   return (
     <div
-      className={`group flex cursor-pointer items-center justify-between rounded border border-green-200 p-2 transition-colors hover:bg-green-50 ${className}`}
+      className={`group flex cursor-pointer items-center justify-between rounded border border-green-500/50 bg-green-950/10 p-2 transition-colors hover:bg-green-950/25 ${className}`}
       onClick={handleStartEdit}
     >
       <div className="flex items-center gap-2">
-        <FileText className="h-4 w-4 text-green-600" />
+        <FileText className="h-4 w-4 text-green-400" />
         <div>
-          <span className="text-sm font-medium text-green-800">CPF</span>
-          <div className="text-sm text-gray-700">
-            {currentCpf || <span className="italic text-gray-400">Clique para adicionar CPF</span>}
+          <span className="text-sm font-medium text-green-300">CPF</span>
+          <div className="text-sm text-slate-200">
+            {currentCpf || <span className="italic text-slate-400">Clique para adicionar CPF</span>}
           </div>
         </div>
       </div>
