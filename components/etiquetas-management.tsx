@@ -52,6 +52,6 @@ export function EtiquetasManagement({ idEmpresa, canManage }: { idEmpresa: numbe
     </> : <p className="text-sm text-muted-foreground">Apenas administradores podem alterar etiquetas.</p>}
     {error && <p className="text-sm text-red-500">{error}</p>}
     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-    <div className="space-y-2">{tags.map((tag) => <div key={tag.id} className="flex items-center justify-between gap-3 rounded-lg border p-3"><Badge style={getLeadTagDisplayStyle(tag.cor)}>{tag.nome}</Badge>{canManage && <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => { setEditing(tag); setName(tag.nome); setColor(tag.cor) }}><Pencil className="mr-2 h-4 w-4" />Editar</Button><Button size="sm" variant="destructive" onClick={() => void remove(tag)}><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></div>}</div>)}</div>
+    <div className="h-72 space-y-2 overflow-y-auto pr-1">{tags.map((tag) => <div key={tag.id} className="flex items-center justify-between gap-3 rounded-lg border p-3"><Badge style={getLeadTagDisplayStyle(tag.cor)}>{tag.nome}</Badge>{canManage && <div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => { setEditing(tag); setName(tag.nome); setColor(tag.cor) }}><Pencil className="mr-2 h-4 w-4" />Editar</Button><Button size="sm" variant="destructive" onClick={() => void remove(tag)}><Trash2 className="mr-2 h-4 w-4" />Excluir</Button></div>}</div>)}</div>
   </div>
 }

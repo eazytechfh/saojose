@@ -7,6 +7,7 @@ export interface User {
   nome_usuario: string
   email: string
   telefone?: string
+  senha?: string
   plano: string
   status: "ativo" | "pendente" | "inativo"
   cargo: "administrador" | "convidado" | "sdr" | "gestor" | "vendedor"
@@ -423,6 +424,45 @@ export async function updateMemberCargo(
       console.error("Error syncing vendedor after cargo update:", syncError)
       return { success: false, error: "Cargo atualizado, mas falhou ao sincronizar vendedor." }
     }
+  }
+
+  return { success: true }
+}
+
+export async function updateMemberInfo(
+  memberId: number,
+  memberData: { nome_usuario: string; email: string; telefone?: string; senha?: string },
+  currentUser: User,
+): Promise<{ success: boolean; error?: string }> {
+  if (!canManageMembers(currentUser)) {
+    return { success: false, error: "Você não tem permissão para editar membros." }
+  }
+
+  const supabase = createClient()
+
+  const updatePayload: Record<string, unknown> = {
+    nome_usuario: memberData.nome_usuario,
+    email: memberData.email,
+    telefone: memberData.telefone || null,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (memberData.senha && memberData.senha.trim().length > 0) {
+    updatePayload.senha = memberData.senha
+  }
+
+  const { error } = await supabase
+    .from("AUTORIZAÇÃO")
+    .update(updatePayload)
+    .eq("id", memberId)
+    .eq("id_empresa", currentUser.id_empresa)
+
+  if (error) {
+    console.error("Error updating member info:", error)
+    if (error.message && error.message.toLowerCase().includes("email")) {
+      return { success: false, error: "Este e-mail já está em uso por outro membro." }
+    }
+    return { success: false, error: "Erro ao atualizar dados do membro." }
   }
 
   return { success: true }

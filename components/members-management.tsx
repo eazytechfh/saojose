@@ -24,8 +24,10 @@ import {
   deleteMember,
   canManageMembers,
 } from "@/lib/auth"
+import { EditMemberForm } from "@/components/edit-member-form"
 import {
   Trash2,
+  Pencil,
   Shield,
   Clock,
   XCircle,
@@ -46,6 +48,7 @@ interface MembersManagementProps {
 export function MembersManagement({ members, currentUser, onMembersUpdate }: MembersManagementProps) {
   const [loading, setLoading] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null)
+  const [editingMember, setEditingMember] = useState<User | null>(null)
   const [error, setError] = useState("")
 
   const canManage = canManageMembers(currentUser)
@@ -244,6 +247,18 @@ export function MembersManagement({ members, currentUser, onMembersUpdate }: Mem
                   </SelectContent>
                 </Select>
 
+                {canManage && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingMember(member)}
+                    disabled={loading === member.id}
+                    className="h-8 w-8 p-0 text-slate-300 hover:text-white hover:bg-slate-800"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+
                 {member.id !== currentUser.id && canManage && (
                   <Button
                     variant="ghost"
@@ -288,6 +303,14 @@ export function MembersManagement({ members, currentUser, onMembersUpdate }: Mem
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Member Dialog */}
+      <EditMemberForm
+        member={editingMember}
+        currentUser={currentUser}
+        onClose={() => setEditingMember(null)}
+        onSuccess={onMembersUpdate}
+      />
     </div>
   )
 }
